@@ -12,13 +12,11 @@ type KeyboardProps = {
 const Keyboard = ({ guessedLetters,currentWord,isGameOver,addGuessedLetter }: KeyboardProps): JSX.Element => {
     const alphabet = "abcdefghijklmnopqrstuvwxyz";
     const StyledKeyboard = styled(Button)<{ status?: string }>(({ theme, status }) => ({
-        margin: theme.spacing(0.8),
-        minWidth: '40px',
-        maxWidth: '40px',
-        minHeight: '40px',
-        maxHeight: '40px',
-        borderRadius: 5,
-        fontSize: '1.2rem',
+        margin: theme.spacing(0.5),
+        minWidth: 'clamp(28px, 7vw, 40px)',
+        minHeight: 'clamp(28px, 7vw, 40px)',
+        borderRadius: 6,
+        fontSize: 'clamp(0.9rem, 2vw, 1.2rem)',
         border: '2px solid #ffffff',
         backgroundColor: '#ff9800',
         color: '#000000',
@@ -70,11 +68,13 @@ const Keyboard = ({ guessedLetters,currentWord,isGameOver,addGuessedLetter }: Ke
     return(
         <Box sx={{
             display: 'flex',
-            flexWrap: 'wrap', 
-            alignItems: 'center',
+            flexWrap: 'wrap',
             justifyContent: 'center',
-            maxWidth: '550px',
-            maxheight: '100%',  
+            gap: 0.5,
+            width: '100%',
+            maxWidth: '600px',
+            padding: 1,
+            overflowX: 'auto',
         }}>
             {KeyboardElements}
         </Box>

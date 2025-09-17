@@ -9,6 +9,7 @@ import confettiUrl from '../../assets/confetti.svg';
 import NewGameButton from "./NewGameButton";
 import { getAllVocabulary, type Vocabulary } from "../../api/vocabulary";
 
+
 const AssemblyEndgame = () => {
     // State variables
     const [vocabList, setVocabList] = useState<Vocabulary[]>([]);
@@ -34,7 +35,7 @@ const AssemblyEndgame = () => {
         fetchAndPick();
     }, []);
     //Derived variables
-    const maxLives: number = currentWord.length + 1;
+    const maxLives: number = getLives(currentWord);
     const wrongGuesses: number = guessedLetters.filter((letter: string): boolean => !currentWord.includes(letter)).length;
     const livesLeft: number = maxLives - wrongGuesses;
     const isGameWon: boolean = currentWord.split("").every((letter: string): boolean => guessedLetters.includes(letter));
@@ -53,6 +54,13 @@ const AssemblyEndgame = () => {
         setCurrentWord(getRandomWord(vocabList));
         setGuessedLetters([]);
     }
+
+    function getLives(word: string): number {
+        const baseLives = 5;
+        const bonus = Math.floor(word.length / 3);
+        return baseLives + bonus;
+    }
+
     if (!isReady) {
         return null;
     }
@@ -66,8 +74,8 @@ const AssemblyEndgame = () => {
                 flexDirection: 'column',
                 my: 4,
                 mx: 'auto',
-                maxWidth: '650px',
-                maxHeight: '650px',
+                maxWidth: '100%',
+                width: '100%',
                 gap:2,
             }}
         >

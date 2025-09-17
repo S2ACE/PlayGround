@@ -8,20 +8,25 @@ export type LifeBarProps = {
   livesLeft: number;
 }
 
+
 const LifeBar = ({ maxLives, livesLeft }: LifeBarProps): JSX.Element => {
- return (
-        <Box display="flex" gap={1}>
-        {Array.from({ length: maxLives }).map((_, index) => (
-            <img
-            key={index}
-            src={index < livesLeft ? filledHeartImg : emptyHeartImg}
-            alt="Heart"
-            width={70}
-            height={70}
-            />
-        ))}
-        </Box>
-    );
+  return (
+    <Box
+      display="flex"
+      flexWrap="wrap"
+      gap={1}
+      justifyContent="flex-start"
+    >
+    {Array.from({ length: maxLives }).map((_, index) => (
+        <img
+          key={index}
+          src={index < livesLeft ? filledHeartImg : emptyHeartImg}
+          alt="Heart"
+          style={{ width: '60px', height: '60px' }}
+        />
+    ))}
+    </Box>
+  );
 };
 
 export default LifeBar;
