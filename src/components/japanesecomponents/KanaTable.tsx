@@ -1,7 +1,8 @@
 import { Grid, Box } from '@mui/material';
 import { useState } from 'react';
-import { kanaRows, voicedKanaRows } from '../../data/kanaData';
+import { kanaRows, voicedKanaRows, youonKanaRows } from '../../data/kanaData';
 import type { JSX } from 'react';
+import Header from './Header';
 import KanaDialog from './KanaDialog';
 import KanaToggle from './KanaToggle';
 import KanaGridCell from './KanaGridCell';
@@ -15,16 +16,28 @@ const ARROW_OFFSET = 30;
 const KanaTable = (): JSX.Element => {
   const { type } = useParams();
   let kanaData: Kana[][];
+  let gridColumns = 5;
+  let isInteractive = true;
 
   switch (type) {
     case 'seion':
       kanaData = kanaRows;
+      gridColumns = 5;
+      isInteractive = true;
       break;
     case 'dakuon&handakuon':
       kanaData = voicedKanaRows;
+      gridColumns = 5;
+      isInteractive = true;
+      break;
+    case 'youon':
+      kanaData = youonKanaRows
+      gridColumns = 3;
+      isInteractive = false;
       break;
     default:
       kanaData = kanaRows;
+      gridColumns = 5;
   }
 
   
@@ -34,8 +47,13 @@ const KanaTable = (): JSX.Element => {
   const [selectedCol, setSelectedCol] = useState(0);
 
   const handleClick = (rowIdx: number, colIdx: number) => {
+    if (!isInteractive){
+      return;
+    }
     const char = kanaData[rowIdx][colIdx][kanaType];
-    if (!char) return;
+    if (!char){
+      return;
+    }
     setSelectedRow(rowIdx);
     setSelectedCol(colIdx);
     setOpen(true);
@@ -90,15 +108,16 @@ const KanaTable = (): JSX.Element => {
   return (
     <>
       <Box sx={{ maxWidth: 480, mx: 'auto', width: '100%', mt: 4 }}>
-        {/* 分頁式 Toggle */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Header title={type} />
+        {/* 平假名,片假名 Toggle */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
           <KanaToggle kanaType={kanaType} setKanaType={setKanaType} />
         </Box>
 
-        {/* 表格區域 */}
+        {/* 50音表 */}
         <Box sx={{ mt: 0 }}>
           {kanaData.map((row, rowIndex) => (
-            <Grid container columns={5} key={rowIndex}>
+            <Grid container columns={gridColumns} key={rowIndex}>
               {row.map((kana, colIndex) => {
                 const char = kana[kanaType];
                 const romaji = kana.romaji;
@@ -108,6 +127,8 @@ const KanaTable = (): JSX.Element => {
                     char={char}
                     romaji={romaji}
                     onClick={() => handleClick(rowIndex, colIndex)}
+                    gridColumns={gridColumns}
+                    isInteractive={isInteractive}
                   />
                 );
               })}
@@ -116,7 +137,7 @@ const KanaTable = (): JSX.Element => {
         </Box>
       </Box>
 
-
+          
       <KanaDialog
         open={open}
         kana={selectedKana}
@@ -134,6 +155,8 @@ const KanaTable = (): JSX.Element => {
           offset={ARROW_OFFSET}
         />
       )}
+
+
     </>
   );
 };

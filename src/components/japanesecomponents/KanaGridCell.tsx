@@ -1,14 +1,16 @@
-import { Grid, Typography, IconButton, Box } from '@mui/material';
+import { Grid, Typography, Box } from '@mui/material';
 import type { JSX } from 'react';
 import KanaSpeak from './KanaSpeak';
 
-interface KanaGridCellProps {
+type KanaGridCellProps = {
     char: string;
     romaji: string;
     onClick: () => void;
+    gridColumns?: number;
+    isInteractive: boolean;
 }
 
-const KanaGridCell = ({ char, romaji, onClick }: KanaGridCellProps): JSX.Element => {
+const KanaGridCell = ({ char, romaji, onClick, gridColumns = 5, isInteractive }: KanaGridCellProps): JSX.Element => {
   const hasKana = !!char;
 
   return (
@@ -27,13 +29,14 @@ const KanaGridCell = ({ char, romaji, onClick }: KanaGridCellProps): JSX.Element
         opacity: hasKana ? 1 : 0.5,
         p: 0,
         transition: 'background 0.2s',
+        minWidth: gridColumns === 3 ? '33.333%' : 'auto',
         ...(hasKana && {
           '&:hover': {
             backgroundColor: '#e65100',
           },
         }),
       }}
-      onClick={hasKana ? onClick : undefined}
+      onClick={hasKana && isInteractive ? onClick : undefined}
     >
       <Box
         sx={{

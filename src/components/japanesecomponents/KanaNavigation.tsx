@@ -2,8 +2,9 @@ import { IconButton } from '@mui/material';
 import type { JSX } from 'react';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import { useMediaQuery, useTheme } from '@mui/material';
 
-interface KanaNavigationProps {
+type KanaNavigationProps = {
     isFirst: boolean;
     isLast: boolean;
     onPrev: () => void;
@@ -19,51 +20,84 @@ const KanaNavigation = ({
     onNext,
     dialogWidth = 400,
     offset = 30,
-}: KanaNavigationProps): JSX.Element => (
-  <>
-    {!isFirst && (
-      <IconButton
-        onClick={onPrev}
-        sx={{
-          position: 'fixed',
-          top: '50%',
-          left: `calc(50% - ${dialogWidth / 2 + offset}px)`,
-          transform: 'translateY(-50%)',
-          zIndex: 1401,
-          bgcolor: 'white',
-          boxShadow: 3,
-          transition: 'background-color 0.2s',
-          '&:hover': {
-            bgcolor: '#f57c00',
-          },
-        }}
-        size="large"
-      >
-        <ArrowBackIosNewIcon />
-      </IconButton>
-    )}
-    {!isLast && (
-      <IconButton
-        onClick={onNext}
-        sx={{
-          position: 'fixed',
-          top: '50%',
-          left: `calc(50% + ${dialogWidth / 2 + offset - 48}px)`,
-          transform: 'translateY(-50%)',
-          zIndex: 1401,
-          bgcolor: 'white',
-          boxShadow: 3,
-          transition: 'background-color 0.2s',
-          '&:hover': {
-            bgcolor: '#f57c00',
-          },
-        }}
-        size="large"
-      >
-        <ArrowForwardIosIcon />
-      </IconButton>
-    )}
-  </>
-);
+}: KanaNavigationProps): JSX.Element => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 小於 600px
+  const isTablet = useMediaQuery(theme.breakpoints.down('md')); // 小於 900px
+
+  const getArrowPosition = () => {
+    if (isMobile) {
+      return {
+        leftOffset: 10,
+        rightOffset: 10,
+        useAbsoluteCenter: false,
+      };
+    }
+    if (isTablet) {
+      return {
+        leftOffset: 20,
+        rightOffset: 20,
+        useAbsoluteCenter: false,
+      };
+    }
+    return {
+      leftOffset: dialogWidth / 2 + offset,
+      rightOffset: dialogWidth / 2 + offset,
+      useAbsoluteCenter: true,
+    };
+  };
+  const { leftOffset, rightOffset, useAbsoluteCenter } = getArrowPosition();
+
+  return (
+    <>
+      {!isFirst && (
+        <IconButton
+          onClick={onPrev}
+          sx={{
+            position: 'fixed',
+            top: '50%',
+            left: useAbsoluteCenter 
+              ? `calc(50% - ${leftOffset}px)` 
+              : `${leftOffset}px`,
+            transform: 'translateY(-50%)',
+            zIndex: 1401,
+            bgcolor: 'white',
+            boxShadow: 3,
+            transition: 'all 0.2s',
+            '&:hover': {
+              bgcolor: '#f57c00',
+            },
+          }}
+          size={isMobile ? 'medium' : 'large'}
+        >
+          <ArrowBackIosNewIcon />
+        </IconButton>
+      )}
+      {!isLast && (
+        <IconButton
+          onClick={onNext}
+          sx={{
+            position: 'fixed',
+            top: '50%',
+            right: useAbsoluteCenter 
+              ? `calc(50% - ${rightOffset}px)` 
+              : `${rightOffset}px`,
+            transform: 'translateY(-50%)',
+            zIndex: 1401,
+            bgcolor: 'white',
+            boxShadow: 3,
+            transition: 'all 0.2s',
+            '&:hover': {
+              bgcolor: '#f57c00',
+            },
+          }}
+          size={isMobile ? 'medium' : 'large'}
+        >
+          <ArrowForwardIosIcon />
+        </IconButton>
+      )}
+    </>
+  );
+};
 
 export default KanaNavigation;

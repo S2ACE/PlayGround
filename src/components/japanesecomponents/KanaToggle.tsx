@@ -1,8 +1,7 @@
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import type { JSX } from 'react';
 
-
-interface KanaToggleProps {
+type KanaToggleProps = {
     kanaType: 'hiragana' | 'katakana';
     setKanaType: (type: 'hiragana' | 'katakana') => void;
 }
@@ -19,14 +18,14 @@ const KanaToggle = ({ kanaType, setKanaType }: KanaToggleProps): JSX.Element => 
                 borderRadius: '8px 8px 0 0',
                 overflow: 'hidden',
                 '.MuiToggleButton-root': {
-                flex: 1,
-                border: 'none',
-                borderRadius: 0,
-                color: '#000000',
-                fontWeight: 'bold',
-                textTransform: 'none',
-                padding: '12px 16px',
-                backgroundColor: '#ff9800',
+                    flex: 1,
+                    border: 'none',
+                    borderRadius: 0,
+                    color: '#000000',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    padding: '12px 16px',
+                    backgroundColor: '#ff9800',
                 '&.Mui-selected, &.Mui-selected:hover': {
                     backgroundColor: '#ffb74d',
                     color: '#000000',

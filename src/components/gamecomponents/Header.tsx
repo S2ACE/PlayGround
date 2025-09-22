@@ -3,8 +3,6 @@ import { Typography}  from '@mui/material';
 import LifeBar from './LifeBar';
 import type { LifeBarProps } from './LifeBar';
 
-
-
 const Header = ({ maxLives, livesLeft }: LifeBarProps): JSX.Element => {
     const statusString = livesLeft > 0 ? "💡 You still have " + (livesLeft) + " chances to get it wrong." : "🔥 Game Over!!";
     

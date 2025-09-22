@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import KanaCanvas from './KanaCanvas';
 import KanaSpeak from './KanaSpeak';
 
-interface KanaDialogProps {
+type KanaDialogProps = {
   open: boolean;
   kana: string;
   romaji : string;

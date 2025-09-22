@@ -3,8 +3,6 @@ import { speakKana } from '../../utils';
 import { IconButton } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
-
-
 const KanaSpeak = ( {char} : { char: string } ): JSX.Element => {
     return (
         <>

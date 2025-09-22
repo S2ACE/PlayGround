@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import { IconButton } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
-interface KanaCanvasProps {
+type KanaCanvasProps = {
   kana: string;
 }
 
@@ -106,7 +106,7 @@ const KanaCanvas: React.FC<KanaCanvasProps> = ({ kana }): JSX.Element => {
         size="small"
         style={{
           position: 'absolute',
-          right: 0,
+          left: 0,
           top: 0,
           zIndex: 2,
           background: '#fff',

@@ -35,9 +35,10 @@ const navItems = [
             submenu: [
                 { text: '清音', path: '/kanatable/seion' },
                 { text: '濁音和半濁音', path: '/kanatable/dakuon&handakuon' },
+                { text: '拗音', path: '/kanatable/youon' },
             ],
         },
-    { text: 'Contact', path: '/contact' },
+    { text: 'Vocabulary', path: '/vocabulary' },
 ];
 
 

@@ -29,51 +29,51 @@
     ];
 
     // 拗音
-    export const youonKanaList: Kana[] = [
-        { hiragana: 'きゃ', katakana: 'キャ', romaji: 'kya' },
+    export const youonKanaRows: Kana[][] = [
+        [ { hiragana: 'きゃ', katakana: 'キャ', romaji: 'kya' },
         { hiragana: 'きゅ', katakana: 'キュ', romaji: 'kyu' },
-        { hiragana: 'きょ', katakana: 'キョ', romaji: 'kyo' },
+        { hiragana: 'きょ', katakana: 'キョ', romaji: 'kyo' } ],
 
-        { hiragana: 'しゃ', katakana: 'シャ', romaji: 'sha' },
+        [ { hiragana: 'しゃ', katakana: 'シャ', romaji: 'sha' },
         { hiragana: 'しゅ', katakana: 'シュ', romaji: 'shu' },
-        { hiragana: 'しょ', katakana: 'ショ', romaji: 'sho' },
+        { hiragana: 'しょ', katakana: 'ショ', romaji: 'sho' } ],
 
-        { hiragana: 'ちゃ', katakana: 'チャ', romaji: 'cha' },
+        [ { hiragana: 'ちゃ', katakana: 'チャ', romaji: 'cha' },
         { hiragana: 'ちゅ', katakana: 'チュ', romaji: 'chu' },
-        { hiragana: 'ちょ', katakana: 'チョ', romaji: 'cho' },
+        { hiragana: 'ちょ', katakana: 'チョ', romaji: 'cho' } ],
 
-        { hiragana: 'にゃ', katakana: 'ニャ', romaji: 'nya' },
+        [ { hiragana: 'にゃ', katakana: 'ニャ', romaji: 'nya' },
         { hiragana: 'にゅ', katakana: 'ニュ', romaji: 'nyu' },
-        { hiragana: 'にょ', katakana: 'ニョ', romaji: 'nyo' },
+        { hiragana: 'にょ', katakana: 'ニョ', romaji: 'nyo' } ],
 
-        { hiragana: 'ひゃ', katakana: 'ヒャ', romaji: 'hya' },
+        [ { hiragana: 'ひゃ', katakana: 'ヒャ', romaji: 'hya' },
         { hiragana: 'ひゅ', katakana: 'ヒュ', romaji: 'hyu' },
-        { hiragana: 'ひょ', katakana: 'ヒョ', romaji: 'hyo' },
+        { hiragana: 'ひょ', katakana: 'ヒョ', romaji: 'hyo' } ],
 
-        { hiragana: 'みゃ', katakana: 'ミャ', romaji: 'mya' },
+        [ { hiragana: 'みゃ', katakana: 'ミャ', romaji: 'mya' },
         { hiragana: 'みゅ', katakana: 'ミュ', romaji: 'myu' },
-        { hiragana: 'みょ', katakana: 'ミョ', romaji: 'myo' },
+        { hiragana: 'みょ', katakana: 'ミョ', romaji: 'myo' } ],
 
-        { hiragana: 'りゃ', katakana: 'リャ', romaji: 'rya' },
+        [ { hiragana: 'りゃ', katakana: 'リャ', romaji: 'rya' },
         { hiragana: 'りゅ', katakana: 'リュ', romaji: 'ryu' },
-        { hiragana: 'りょ', katakana: 'リョ', romaji: 'ryo' },
+        { hiragana: 'りょ', katakana: 'リョ', romaji: 'ryo' } ],
 
         // 濁音拗音
-        { hiragana: 'ぎゃ', katakana: 'ギャ', romaji: 'gya' },
+        [ { hiragana: 'ぎゃ', katakana: 'ギャ', romaji: 'gya' },
         { hiragana: 'ぎゅ', katakana: 'ギュ', romaji: 'gyu' },
-        { hiragana: 'ぎょ', katakana: 'ギョ', romaji: 'gyo' },
+        { hiragana: 'ぎょ', katakana: 'ギョ', romaji: 'gyo' } ],
 
-        { hiragana: 'じゃ', katakana: 'ジャ', romaji: 'ja' },
+        [ { hiragana: 'じゃ', katakana: 'ジャ', romaji: 'ja' },
         { hiragana: 'じゅ', katakana: 'ジュ', romaji: 'ju' },
-        { hiragana: 'じょ', katakana: 'ジョ', romaji: 'jo' },
+        { hiragana: 'じょ', katakana: 'ジョ', romaji: 'jo' } ],
 
-        { hiragana: 'びゃ', katakana: 'ビャ', romaji: 'bya' },
+        [ { hiragana: 'びゃ', katakana: 'ビャ', romaji: 'bya' },
         { hiragana: 'びゅ', katakana: 'ビュ', romaji: 'byu' },
-        { hiragana: 'びょ', katakana: 'ビョ', romaji: 'byo' },
+        { hiragana: 'びょ', katakana: 'ビョ', romaji: 'byo' } ],
 
         // 半濁音拗音
-        { hiragana: 'ぴゃ', katakana: 'ピャ', romaji: 'pya' },
+        [ { hiragana: 'ぴゃ', katakana: 'ピャ', romaji: 'pya' },
         { hiragana: 'ぴゅ', katakana: 'ピュ', romaji: 'pyu' },
-        { hiragana: 'ぴょ', katakana: 'ピョ', romaji: 'pyo' },
+        { hiragana: 'ぴょ', katakana: 'ピョ', romaji: 'pyo' } ],
     ];
 
