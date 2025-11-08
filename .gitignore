@@ -1,3 +1,6 @@
+# ====================
+# Frontend (Node/React) - Vite
+# ====================
 # Logs
 logs
 *.log
@@ -22,3 +25,76 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Frontend env files
+frontend/.env.local
+frontend/.env.*.local
+
+# ====================
+# Backend (.NET Core) - ASP.NET
+# ====================
+
+# Build results
+backend/[Bb]in/
+backend/[Oo]bj/
+backend/[Ll]og/
+backend/[Ll]ogs/
+
+# User-specific files
+backend/*.rsuser
+backend/*.suo
+backend/*.user
+backend/*.userosscache
+backend/*.sln.docstates
+
+# Visual Studio cache/options
+backend/.vs/
+backend/.vscode/
+
+# NuGet
+backend/packages/
+backend/.nupkg
+backend/*.nupkg
+backend/*.snupkg
+backend/**/packages/*
+backend/!**/packages/build/
+
+# .NET Core
+backend/project.lock.json
+backend/project.fragment.lock.json
+backend/artifacts/
+
+# Firebase Admin SDK
+backend/**/firebase-adminsdk*.json
+backend/**/serviceAccountKey.json
+backend/**/*-adminsdk-*.json
+
+# appsettings with secrets
+backend/**/appsettings.Development.json
+backend/**/appsettings.Production.json
+backend/**/appsettings.*.json
+backend/**/secrets.json
+
+# Entity Framework
+backend/**/Migrations/
+
+# Rider IDE
+backend/.idea/
+backend/**/*.sln.iml
+
+# Visual Studio Code
+backend/.vscode/
+
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# env files
+.env
+.env.local
