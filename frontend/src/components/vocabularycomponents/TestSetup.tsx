@@ -39,12 +39,12 @@ interface WordGroup {
 export interface TestConfig {
     level: string;
     selectedGroups: number[];
-    onlyFavorites: boolean;
+    onlyFavourites: boolean;
     proficiencyLevels: ProficiencyLevel[];
 }
 
-export interface WordProgress {
-    wordId: string;
+export interface VocabularyProgress {
+    vocabularyId: string;
     masteredCount: number;
     currentProficiency: ProficiencyLevel;
     lastTestDate: string;
@@ -55,7 +55,7 @@ const TestSetup = () : JSX.Element => {
     const [config, setConfig] = useState<TestConfig>({
         level: '',
         selectedGroups: [],
-        onlyFavorites: false,
+        onlyFavourites: false,
         proficiencyLevels: ['mastered', 'somewhat_familiar', 'not_familiar']
     });
 
@@ -187,8 +187,8 @@ const TestSetup = () : JSX.Element => {
         }
     }, []);
 
-    const handleFavoriteToggle = useCallback((checked: boolean) => {
-        setConfig(prev => ({ ...prev, onlyFavorites: checked }));
+    const handleFavouriteToggle = useCallback((checked: boolean) => {
+        setConfig(prev => ({ ...prev, onlyFavourites: checked }));
     }, []);
 
     const getProficiencyLabel = useCallback((level: ProficiencyLevel): string => {
@@ -623,8 +623,8 @@ const TestSetup = () : JSX.Element => {
                     <FormControlLabel
                         control={
                             <Checkbox
-                                checked={config.onlyFavorites}
-                                onChange={(e) => handleFavoriteToggle(e.target.checked)}
+                                checked={config.onlyFavourites}
+                                onChange={(e) => handleFavouriteToggle(e.target.checked)}
                                 sx={{
                                     color: '#000000',
                                     transition: 'none',

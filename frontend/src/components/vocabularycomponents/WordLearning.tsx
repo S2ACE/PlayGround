@@ -1,3 +1,4 @@
+// WordLearning.tsx
 import { Box, Typography, Button, IconButton } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import { KeyboardArrowLeft } from '@mui/icons-material';
@@ -6,6 +7,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAllVocabulary, type Vocabulary } from '../../api/vocabularyApi';
 import WordCard from './WordCard';
 import type { JSX } from 'react';
+import { favouriteService } from '../../services/FavouriteService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const WordLearning = (): JSX.Element => {
     const { level, range } = useParams<{ level: string; range: string }>();
@@ -14,40 +17,49 @@ const WordLearning = (): JSX.Element => {
     const [words, setWords] = useState<Vocabulary[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [favorites, setFavorites] = useState<string[]>([]); // 新增最愛狀態
+    const [favourites, setFavourites] = useState<number[]>([]);
+    const { user } = useAuth();
 
-    // 載入最愛列表（從 localStorage）
+    // 載入最愛列表
     useEffect(() => {
-        const savedFavorites = localStorage.getItem('favoriteWords');
-        if (savedFavorites) {
+        const loadFavourites = async () => {
             try {
-                setFavorites(JSON.parse(savedFavorites));
+                const favouriteIds = await favouriteService.getFavouriteIds();
+                setFavourites(favouriteIds);
             } catch (error) {
-                console.error('Failed to parse favorites from localStorage:', error);
+                console.error('載入收藏列表失敗:', error);
+            }
+        };
+        loadFavourites();
+    }, [user]);
+
+    // ✅ 處理最愛切換 (修正變數命名)
+    const handleFavouriteToggle = useCallback(async (vocabularyIdStr: string) => {
+        const vocabularyId = Number(vocabularyIdStr);
+        const currentIsFavourite = favourites.includes(vocabularyId);
+
+        console.log('Toggling favourite for vocabulary:', vocabularyId);
+
+        // 樂觀更新 UI
+        if (currentIsFavourite) {
+            setFavourites(favourites.filter(id => id !== vocabularyId));
+        } else {
+            setFavourites([...favourites, vocabularyId]);
+        }
+
+        try {
+            // 呼叫 FavouriteService (含 Debounce)
+            await favouriteService.toggleFavourite(vocabularyId, currentIsFavourite);
+        } catch (error) {
+            console.error('切換收藏失敗:', error);
+            // 失敗時回滾 UI
+            if (currentIsFavourite) {
+                setFavourites([...favourites, vocabularyId]);
+            } else {
+                setFavourites(favourites.filter(id => id !== vocabularyId));
             }
         }
-    }, []);
-
-    // 儲存最愛列表到 localStorage
-    const saveFavoritesToStorage = (newFavorites: string[]) => {
-        localStorage.setItem('favoriteWords', JSON.stringify(newFavorites));
-    };
-
-    // 處理最愛切換
-    const handleFavoriteToggle = useCallback((wordId: string) => {
-        console.log('Favorite toggle for:', wordId); // 調試用
-        
-        setFavorites(prevFavorites => {
-            const newFavorites = prevFavorites.includes(wordId)
-                ? prevFavorites.filter(id => id !== wordId) // 移除最愛
-                : [...prevFavorites, wordId]; // 加入最愛
-            
-            saveFavoritesToStorage(newFavorites); // 儲存到 localStorage
-            console.log('Updated favorites:', newFavorites); // 調試用
-            
-            return newFavorites;
-        });
-    }, []);
+    }, [favourites]);
 
     useEffect(() => {
         const fetchWords = async () => {
@@ -128,7 +140,7 @@ const WordLearning = (): JSX.Element => {
     useEffect(() => {
         // 只在手機版時執行
         if (window.innerWidth <= 600) {
-            // 延遲一點執行，確保 WordCard 已經渲染完成
+            // 延遲一點執行,確保 WordCard 已經渲染完成
             setTimeout(() => {
                 window.scrollTo({
                     top: document.documentElement.scrollHeight,
@@ -164,12 +176,13 @@ const WordLearning = (): JSX.Element => {
         );
     }
 
-    const currentWord = words[currentIndex];
+    // ✅ 修正變數命名: currentWord -> currentVocabulary
+    const currentVocabulary = words[currentIndex];
     const isFirst = currentIndex === 0;
     const isLast = currentIndex === words.length - 1;
     
-    // 檢查當前單字是否在最愛列表中
-    const isFavorite = favorites.includes(String(currentWord.id || currentWord.word));
+    // ✅ 檢查當前單字是否在最愛列表中
+    const isFavourite = favourites.includes(Number(currentVocabulary.id));
 
     return (
         <Box>
@@ -260,17 +273,16 @@ const WordLearning = (): JSX.Element => {
                 marginLeft: { xs: 'calc(50% - 50vw)', sm: 'auto' },
                 marginRight: { xs: 'calc(50% - 50vw)', sm: 'auto' },
                 width: { xs: '100vw', sm: '100%' },
-                // 固定高度設定
                 height: { xs: 'calc(100vh - 160px)', sm: 'auto' },
             }}>
                 <WordCard 
-                    word={currentWord}
+                    word={currentVocabulary}
                     onPrevious={handlePrevious}
                     onNext={handleNext}
                     showPrevious={!isFirst}
                     showNext={!isLast}
-                    isFavorite={isFavorite}
-                    onFavoriteToggle={handleFavoriteToggle}
+                    isFavourite={isFavourite}
+                    onFavouriteToggle={handleFavouriteToggle}
                 />
             </Box>
         </Box>

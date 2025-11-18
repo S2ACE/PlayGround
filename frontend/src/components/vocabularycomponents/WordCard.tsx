@@ -1,6 +1,4 @@
-// WordCard.tsx (修改版本 - test 模式 flip 後顯示完整內容)
 import { Card, CardContent, Typography, Box, IconButton, Chip, Divider } from '@mui/material';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useState } from 'react';
@@ -16,8 +14,8 @@ type WordCardProps = {
     showPrevious?: boolean;
     showNext?: boolean;
     mode?: 'study' | 'test';
-    isFavorite?: boolean;
-    onFavoriteToggle?: (wordId: string) => void;
+    isFavourite?: boolean;
+    onFavouriteToggle?: (wordId: string) => void;
     // 新增測試模式相關 props
     onCardClick?: () => void;
     isFlipped?: boolean;
@@ -31,8 +29,8 @@ const WordCard = ({
     showPrevious = false,
     showNext = false,
     mode = 'study',
-    isFavorite = false,
-    onFavoriteToggle,
+    isFavourite = false,
+    onFavouriteToggle,
     onCardClick,
     isFlipped: propIsFlipped,
     hideControls = false
@@ -92,9 +90,9 @@ const WordCard = ({
         }
     };
 
-    const handleFavoriteClick = () => {
-        if (onFavoriteToggle) {
-            onFavoriteToggle(String(word.id || word.word));
+    const handleFavouriteClick = () => {
+        if (onFavouriteToggle) {
+            onFavouriteToggle(String(word.id || word.word));
         }
     };
 
@@ -412,7 +410,7 @@ const WordCard = ({
                     <Box
                         onClick={(e) => {
                             e.stopPropagation();
-                            handleFavoriteClick();
+                            handleFavouriteClick();
                         }}
                         sx={{
                             width: 32,
@@ -426,11 +424,11 @@ const WordCard = ({
                                 transform: 'scale(1.1)',
                             },
                         }}
-                        title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        title={isFavourite ? "Remove from favourites" : "Add to favourites"}
                     >
                         <img
-                            src={isFavorite ? filledHeartImg : emptyHeartImg}
-                            alt={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                            src={isFavourite ? filledHeartImg : emptyHeartImg}
+                            alt={isFavourite ? "Remove from favourites" : "Add to favourites"}
                             style={{ width: '26px', height: '23px' }}
                         />
                     </Box>

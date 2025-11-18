@@ -1,16 +1,22 @@
+// vite.config.ts
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: '0.0.0.0',
-    proxy: {
-      '/api': {
-        target: 'https://localhost:44376',
-        changeOrigin: true,
-        secure: false
+export default defineConfig(({ mode }) => {
+  return {
+    plugins: [react()],
+    esbuild: {
+      // 只在 production 環境移除 console
+      pure: mode === 'production' ? ['console.log', 'console.debug', 'console.info'] : [],
+    },
+    server: {
+      host: '0.0.0.0',
+      proxy: {
+        '/api': {
+          target: 'https://localhost:44376',
+          changeOrigin: true,
+          secure: false
+        }
       }
     }
   }

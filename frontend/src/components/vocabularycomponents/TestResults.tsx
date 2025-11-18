@@ -1,4 +1,4 @@
-// TestResults.tsx
+// TestResults.tsx - 自動判斷 localStorage 或 Database
 import { useEffect, useState, type JSX } from 'react';
 import {
     Box,
@@ -10,9 +10,10 @@ import {
     Divider
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import type { WordProgress, ProficiencyLevel } from './TestSetup';
+import type { VocabularyProgress, ProficiencyLevel } from './TestSetup';
+import { vocabularyProgressService, getCurrentProficiency } from '../../services/VocabularyProgressService';
 
-const TestResults = () : JSX.Element => {
+const TestResults = (): JSX.Element => {
     const navigate = useNavigate();
     const [stats, setStats] = useState({
         mastered: 0,
@@ -20,20 +21,51 @@ const TestResults = () : JSX.Element => {
         not_familiar: 0,
         total: 0
     });
+    const [isLoading, setIsLoading] = useState(true);
 
+    // ✅ 使用 VocabularyProgressService 載入進度
     useEffect(() => {
-        const progress: WordProgress[] = JSON.parse(localStorage.getItem('wordProgress') || '[]');
+        const loadProgress = async () => {
+            try {
+                setIsLoading(true);
+                
+                // ✅ 從 Service 讀取 (自動判斷 localStorage 或 database)
+                const savedProgress = await vocabularyProgressService.getProgress();
+                
+                // ✅ 轉換為 VocabularyProgress 格式並計算 currentProficiency
+                const progress: VocabularyProgress[] = savedProgress.map(p => ({
+                    vocabularyId: String(p.vocabularyId),
+                    masteredCount: p.masteredCount,
+                    currentProficiency: getCurrentProficiency(p.masteredCount),
+                    lastTestDate: p.lastTestDate
+                }));
 
-        const masteredCount = progress.filter(p => p.currentProficiency === 'mastered').length;
-        const somewhatCount = progress.filter(p => p.currentProficiency === 'somewhat_familiar').length;
-        const notFamiliarCount = progress.filter(p => p.currentProficiency === 'not_familiar').length;
+                // ✅ 統計各個等級的數量
+                const masteredCount = progress.filter(p => p.currentProficiency === 'mastered').length;
+                const somewhatCount = progress.filter(p => p.currentProficiency === 'somewhat_familiar').length;
+                const notFamiliarCount = progress.filter(p => p.currentProficiency === 'not_familiar').length;
 
-        setStats({
-            mastered: masteredCount,
-            somewhat_familiar: somewhatCount,
-            not_familiar: notFamiliarCount,
-            total: progress.length
-        });
+                setStats({
+                    mastered: masteredCount,
+                    somewhat_familiar: somewhatCount,
+                    not_familiar: notFamiliarCount,
+                    total: progress.length
+                });
+
+                console.log('✅ 測試結果已載入:', {
+                    mastered: masteredCount,
+                    somewhat_familiar: somewhatCount,
+                    not_familiar: notFamiliarCount,
+                    total: progress.length
+                });
+            } catch (error) {
+                console.error('❌ 載入測試結果失敗:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadProgress();
     }, []);
 
     const getProficiencyLabel = (level: ProficiencyLevel): string => {
@@ -51,6 +83,20 @@ const TestResults = () : JSX.Element => {
             case 'not_familiar': return '#f44336';
         }
     };
+
+    // ✅ 載入中顯示
+    if (isLoading) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '400px'
+            }}>
+                <Typography>載入中...</Typography>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{

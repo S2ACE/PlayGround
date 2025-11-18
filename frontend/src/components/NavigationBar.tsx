@@ -9,7 +9,6 @@ import {
     Box,
     Drawer,
     List,
-    ListItem,
     ListItemButton,
     ListItemText,
     useTheme,
@@ -32,7 +31,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import ExitToApp from '@mui/icons-material/ExitToApp';
 import LoginIcon from '@mui/icons-material/Login';
-import { Google, Close, ArrowBack, Link as LinkIcon, Settings } from '@mui/icons-material';
+import { Google, Close, ArrowBack, Settings } from '@mui/icons-material';
 import WoodBar from '../assets/wood_bar.png';
 
 // 導入認證相關
@@ -408,60 +407,94 @@ const NavigationBar = () : JSX.Element => {
     };
 
     const drawer = (
-        <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ my: 2 }}>
-                Ace Playground
-            </Typography>
-            <Divider />
-            <List>
-                {navItems.map((item) => {
-                    if (item.submenu) {
-                        return item.submenu.map((sub) => (
-                            <ListItem key={sub.text} disablePadding>
-                                <ListItemButton component={Link} to={sub.path} sx={{ textAlign: 'center' }}>
-                                    <ListItemText primary={`${item.text} - ${sub.text}`} />
+        <Box sx={{ backgroundColor: '#1a1a1a', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* 上方區域:標題 + 導航項目 */}
+            <Box>
+                <Typography variant="h6" sx={{ p: 2, color: '#fff', textAlign: 'center' }}>
+                    Ace Playground
+                </Typography>
+
+                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+
+                <List>
+                    {navItems.map((item) => {
+                        if (item.submenu) {
+                            return item.submenu.map((sub) => (
+                                <ListItemButton
+                                    key={sub.path}
+                                    component={Link}
+                                    to={sub.path}
+                                    onClick={handleDrawerToggle}
+                                    sx={{ color: '#fff', textAlign : 'center'  }}
+                                >
+                                    <ListItemText primary={sub.text} />
                                 </ListItemButton>
-                            </ListItem>
-                        ));
-                    } else {
-                        return (
-                            <ListItem key={item.text} disablePadding>
-                                <ListItemButton component={Link} to={item.path} sx={{ textAlign: 'center' }}>
+                            ));
+                        } else {
+                            return (
+                                <ListItemButton
+                                    key={item.path}
+                                    component={Link}
+                                    to={item.path}
+                                    onClick={handleDrawerToggle}
+                                    sx={{ color: '#fff', textAlign : 'center' }}
+                                >
                                     <ListItemText primary={item.text} />
                                 </ListItemButton>
-                            </ListItem>
-                        );
-                    }
-                })}
-            </List>
+                            );
+                        }
+                    })}
+                </List>
+            </Box>
 
-            {/* 手機版登入/用戶資訊 */}
-            <Divider />
-            <Box sx={{ p: 2 }}>
-                {user ? (
-                    <>
-                        <Typography variant="body2" sx={{ mb: 1 }}>
-                            {user.displayName || user.email}
-                        </Typography>
+            {/* 彈性空間 - 將用戶資訊推到底部 */}
+            <Box sx={{ flexGrow: 1 }} />
+
+            {/* 底部區域:用戶資訊 */}
+            <Box>
+                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+                <Box sx={{ p: 2, backgroundColor: '#1a1a1a' }}>
+                    {user ? (
+                        <Stack spacing={1} alignItems="center">
+                            <Typography variant="body2" sx={{ color: '#fff' }}>
+                                {user.displayName || user.email}
+                            </Typography>
+
+                            <Button 
+                                variant="outlined" 
+                                size="small" 
+                                component={Link}
+                                to="/settings"
+                                onClick={handleDrawerToggle}
+                                startIcon={<Settings />}
+                            >
+                                設定
+                            </Button>
+
+                            <Button 
+                                variant="outlined" 
+                                size="small" 
+                                onClick={handleSignOut}
+                                startIcon={<ExitToApp />}
+                            >
+                                登出
+                            </Button>
+                        </Stack>
+                    ) : (
                         <Button 
                             variant="outlined" 
                             size="small" 
-                            onClick={handleSignOut}
-                            startIcon={<ExitToApp />}
+                            onClick={handleGoToLogin}
+                            startIcon={<LoginIcon />}
+                            sx={{ 
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                color: '#fff',
+                            }}
                         >
-                            登出
+                            登入
                         </Button>
-                    </>
-                ) : (
-                    <Button 
-                        variant="outlined" 
-                        size="small" 
-                        onClick={handleGoToLogin}
-                        startIcon={<LoginIcon />}
-                    >
-                        登入
-                    </Button>
-                )}
+                    )}
+                </Box>
             </Box>
         </Box>
     );

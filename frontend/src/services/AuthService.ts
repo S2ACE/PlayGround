@@ -16,7 +16,7 @@ import {
 import { auth } from '../firebase/config';
 
 const API_AUTH_BASE_URL = '/api/auth/';
-const API_MEMBERS_BASE_URL = '/api/members/';
+const API_MEMBERS_BASE_URL = '/api/members';
 
 export class AuthService {
     private googleProvider = new GoogleAuthProvider();
@@ -140,13 +140,13 @@ export class AuthService {
             
             if (Object.keys(updates).length > 0) {
                 await updateProfile(currentUser, updates);
-                console.log('✅ Firebase Profile 已更新');
+                console.log('✅ Firebase Profile 已更新');           
             }
 
             // 2. 呼叫後端 API 更新資料庫
             const idToken = await currentUser.getIdToken();
             
-            const response = await fetch(`${API_MEMBERS_BASE_URL}${currentUser.uid}`, {
+            const response = await fetch(`${API_MEMBERS_BASE_URL}/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -165,6 +165,7 @@ export class AuthService {
 
             const updatedMember = await response.json();
             console.log('✅ 會員資料已更新:', updatedMember);
+
         } catch (error: any) {
             console.error('❌ 更新會員資料失敗:', error);
             throw error;
@@ -199,9 +200,14 @@ export class AuthService {
             await linkWithCredential(currentUser, credential);
             
             console.log('✅ 密碼已成功連結到帳戶');
-            
+
+            // ✅ 關鍵步驟：重新載入用戶資料（獲取最新的 providerData）
+            await currentUser.reload();
+            console.log('✅ 用戶資料已重新載入');
+            console.log("currentuser.emailVerified:" + currentUser.emailVerified);
             // 同步到資料庫（更新 providers 資訊）
             await this.syncUserToDatabase(currentUser);
+            await currentUser.reload();
         } catch (error: any) {
             console.error('❌ 連結密碼失敗:', error);
             
@@ -385,7 +391,7 @@ export class AuthService {
 
     // 同步用戶到資料庫
     private async syncUserToDatabase(user: User) {
-        const currentProvider = this.getCurrentProvider(user);
+        const providers = this.getAllProviders(user);
         
         const userData = {
             id: user.uid,
@@ -394,10 +400,9 @@ export class AuthService {
             photoURL: user.photoURL,
             emailVerified: user.emailVerified,
             lastLoginAt: new Date().toISOString(),
-            provider: currentProvider.name,
-            providerId: currentProvider.providerId,
+            providers: providers  // ✅ 傳送所有 providers
         };
-
+        console.log('🔄 同步用戶到資料庫:', userData);
         try {
             const idToken = await user.getIdToken();
             const response = await fetch(API_AUTH_BASE_URL + 'sync', {
@@ -419,19 +424,34 @@ export class AuthService {
         }
     }
 
-    private getCurrentProvider(user: User): { name: string; providerId: string } {
-        const signInMethod = user.providerData?.[0]?.providerId;
-        
-        if (signInMethod === 'google.com') {
-            return { name: 'google', providerId: 'google.com' };
-        } else if (signInMethod === 'password') {
-            return { name: 'email', providerId: 'password' };
-        } else if (signInMethod === 'facebook.com') {
-            return { name: 'facebook', providerId: 'facebook.com' };
+    // ✅ 取得所有 providers
+    private getAllProviders(user: User): Array<{ provider: string; providerId: string }> {
+        if (!user.providerData || user.providerData.length === 0) {
+            console.warn('⚠️ User providerData is empty or null', user.uid);
+            throw new Error('無法取得用戶的認證提供者資訊');
         }
-        
-        return { name: 'email', providerId: 'password' };
+
+        return user.providerData.map(providerInfo => {
+            const providerId = providerInfo.providerId;
+            
+            if (providerId === 'google.com') {
+                return { provider: 'google', providerId: 'google.com' };
+            } else if (providerId === 'password') {
+                return { provider: 'email', providerId: 'password' };
+            } else if (providerId === 'facebook.com') {
+                return { provider: 'facebook', providerId: 'facebook.com' };
+            } else if (providerId === 'apple.com') {
+                return { provider: 'apple', providerId: 'apple.com' };
+            }
+            
+            // 預設處理其他 provider
+            return { 
+                provider: providerId.replace('.com', ''), 
+                providerId: providerId 
+            };
+        });
     }
+
 
     // 取得當前用戶
     getCurrentUser(): User | null {

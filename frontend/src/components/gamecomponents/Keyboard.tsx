@@ -4,12 +4,12 @@ import { Box, Button } from "@mui/material";
 
 type KeyboardProps = {
     guessedLetters: string[];
-    currentWord: string;
+    currentVocabularty: string;
     isGameOver: boolean;
     addGuessedLetter: (letter:string) => void;
 };
 
-const Keyboard = ({ guessedLetters,currentWord,isGameOver,addGuessedLetter }: KeyboardProps): JSX.Element => {
+const Keyboard = ({ guessedLetters,currentVocabularty,isGameOver,addGuessedLetter }: KeyboardProps): JSX.Element => {
     const alphabet = "abcdefghijklmnopqrstuvwxyz";
     const StyledKeyboard = styled(Button)<{ status?: string }>(({ theme, status }) => ({
         margin: theme.spacing(0.5),
@@ -43,7 +43,7 @@ const Keyboard = ({ guessedLetters,currentWord,isGameOver,addGuessedLetter }: Ke
 
     const KeyboardElements: JSX.Element[] = alphabet.split('').map((letter) => {
         const isGuessed: boolean = guessedLetters.includes(letter)
-        const isCorrect: boolean = isGuessed && currentWord.includes(letter)
+        const isCorrect: boolean = isGuessed && currentVocabularty.includes(letter)
 
 
         return (

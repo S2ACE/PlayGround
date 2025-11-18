@@ -13,7 +13,7 @@ import confettiUrl from '../../assets/confetti.svg';
 const WordGuess = () => {
     // State variables
     const { getNewWord, loading, isReady } = useVocabulary(); 
-    const [currentWord, setCurrentWord] = useState<string>('');
+    const [currentVocabularty, setCurrentWord] = useState<string>('');
     const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
     const [showConfetti, setShowConfetti] = useState<boolean>(true);
 
@@ -27,14 +27,14 @@ const WordGuess = () => {
 
     //Derived variables
     const gameStats = useMemo(() => {
-        const maxLives: number = getLives(currentWord);
-        const wrongGuesses: number = guessedLetters.filter((letter: string): boolean => !currentWord.includes(letter)).length;
+        const maxLives: number = getLives(currentVocabularty);
+        const wrongGuesses: number = guessedLetters.filter((letter: string): boolean => !currentVocabularty.includes(letter)).length;
         const livesLeft: number = maxLives - wrongGuesses;
-        const isGameWon: boolean = currentWord.split("").every((letter: string): boolean => guessedLetters.includes(letter));
+        const isGameWon: boolean = currentVocabularty.split("").every((letter: string): boolean => guessedLetters.includes(letter));
         const isGameLost: boolean = wrongGuesses >= maxLives;
         const isGameOver: boolean = isGameWon || isGameLost;
         return { maxLives, wrongGuesses, livesLeft, isGameWon, isGameLost, isGameOver };
-    }, [currentWord, guessedLetters]);
+    }, [currentVocabularty, guessedLetters]);
 
     function addGuessedLetter (letter: string): void {
         setGuessedLetters(prevLetters => 
@@ -53,7 +53,7 @@ const WordGuess = () => {
         return baseLives + bonus;
     }
 
-    if (loading || !currentWord) {
+    if (loading || !currentVocabularty) {
         return <LoadingSpinner message="Loading word" />;
     }
 
@@ -83,13 +83,13 @@ const WordGuess = () => {
                 confettiUrl={confettiUrl}
             />
             <GuessTile
-                currentWord={currentWord}
+                currentVocabularty={currentVocabularty}
                 guessedLetters={guessedLetters}
                 isGameLost={isGameLost}
             />
             <Keyboard 
                 guessedLetters={guessedLetters}
-                currentWord={currentWord}
+                currentVocabularty={currentVocabularty}
                 isGameOver={isGameOver}
                 addGuessedLetter={addGuessedLetter}
             />

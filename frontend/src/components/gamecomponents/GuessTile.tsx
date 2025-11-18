@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { useMemo, memo, type JSX } from 'react';
 
 type GuessTileProps = {
-    currentWord: string;
+    currentVocabularty: string;
     guessedLetters: string[];
     isGameLost: boolean;
 };
@@ -18,15 +18,15 @@ type GuessTileProps = {
     },
   }));
 
-const GuessTile = memo(({ currentWord, guessedLetters, isGameLost }: GuessTileProps): JSX.Element => {
+const GuessTile = memo(({ currentVocabularty, guessedLetters, isGameLost }: GuessTileProps): JSX.Element => {
   const letterData = useMemo(() => {
-        return currentWord.split('').map((letter: string, index: number) => ({
+        return currentVocabularty.split('').map((letter: string, index: number) => ({
           letter,
           index,
           shouldReveal: isGameLost || guessedLetters.includes(letter),
           isMissed: isGameLost && !guessedLetters.includes(letter)
         }));
-    }, [currentWord, guessedLetters, isGameLost]);
+    }, [currentVocabularty, guessedLetters, isGameLost]);
 
   return (
     <Box
