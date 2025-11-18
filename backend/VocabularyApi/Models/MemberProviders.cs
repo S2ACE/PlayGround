@@ -1,16 +1,15 @@
-﻿// Models/MemberProvider.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VocabularyApi.Models
 {
     [Table("MemberProviders")]
-    public class MemberProvider
+    public class MemberProviders
     {
         // ✅ EF Core 看到 "Id" 欄位，推斷這是對應 Member.Id 的外鍵
         [Key, Column(Order = 0)]
         [StringLength(128)]
-        [ForeignKey("Member")]
+        [ForeignKey("Members")]
         public string Id { get; set; } = string.Empty;
 
         [Key, Column(Order = 1)]

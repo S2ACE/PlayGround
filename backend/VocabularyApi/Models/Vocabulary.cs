@@ -11,11 +11,11 @@ namespace VocabularyApi.Models
 
         [Required]
         [StringLength(255)]
-        public string Word { get; set; }
+        public string Word { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
-        public string PartOfSpeech { get; set; }
+        public string PartOfSpeech { get; set; } = string.Empty;
 
         [StringLength(500)]
         public string? ChineseDefinition { get; set; }
@@ -31,7 +31,7 @@ namespace VocabularyApi.Models
 
         [Required]
         [StringLength(5)]
-        public string Language { get; set; }
+        public string Language { get; set; } = string.Empty;
 
         [StringLength(200)]
         public string? Pronunciation { get; set; }
@@ -42,16 +42,8 @@ namespace VocabularyApi.Models
 
         [Column(TypeName = "datetime2(3)")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public virtual ICollection<FavouriteVocabulary> FavouritedBy { get; set; } = new List<FavouriteVocabulary>();
+        public virtual ICollection<VocabularyProgress> ProgressRecords { get; set; } = new List<VocabularyProgress>();
 
-        // 導航屬性：用戶最愛
-        //public virtual ICollection<UserFavoriteWord> UserFavorites { get; set; }
-
-        public Vocabulary()
-        {
-            Word = string.Empty;
-            PartOfSpeech = string.Empty;
-            Language = string.Empty;
-            //UserFavorites = new HashSet<UserFavoriteWord>();
-        }
     }
 }

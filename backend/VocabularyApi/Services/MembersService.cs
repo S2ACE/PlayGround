@@ -1,9 +1,8 @@
-﻿// Services/MembersService.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using VocabularyApi.DbContexts;
 using VocabularyApi.Models;
 using VocabularyApi.DTOs;
-using System.Text.Json;
+using FirebaseAdmin.Auth;
 
 namespace VocabularyApi.Services
 {
@@ -21,8 +20,6 @@ namespace VocabularyApi.Services
         /// <summary>
         /// 根據 ID 取得會員資料
         /// </summary>
-        /// <param name="id">會員 ID</param>
-        /// <returns>會員資料</returns>
         public async Task<MembersDto?> GetMemberByIdAsync(string id)
         {
             try
@@ -47,6 +44,7 @@ namespace VocabularyApi.Services
                     id,
                     member.Providers?.Count ?? 0,
                     string.Join(", ", member.Providers?.Select(p => p.Provider) ?? new List<string>()));
+
                 return MapToDto(member);
             }
             catch (Exception ex)
@@ -59,8 +57,6 @@ namespace VocabularyApi.Services
         /// <summary>
         /// 根據 Email 取得會員資料
         /// </summary>
-        /// <param name="email">會員 Email</param>
-        /// <returns>會員資料</returns>
         public async Task<MembersDto?> GetMemberByEmailAsync(string email)
         {
             try
@@ -72,7 +68,6 @@ namespace VocabularyApi.Services
                 }
 
                 var normalizedEmail = email.Trim().ToLower();
-
                 var member = await _context.Members
                     .Include(m => m.Providers)
                     .FirstOrDefaultAsync(m => m.Email.ToLower() == normalizedEmail);
@@ -96,8 +91,6 @@ namespace VocabularyApi.Services
         /// <summary>
         /// 檢查 Email 是否已存在
         /// </summary>
-        /// <param name="email">要檢查的 Email</param>
-        /// <returns>是否存在</returns>
         public async Task<bool> EmailExistsAsync(string email)
         {
             try
@@ -106,7 +99,6 @@ namespace VocabularyApi.Services
                     return false;
 
                 var normalizedEmail = email.Trim().ToLower();
-
                 return await _context.Members
                     .AnyAsync(m => m.Email.ToLower() == normalizedEmail);
             }
@@ -116,18 +108,15 @@ namespace VocabularyApi.Services
                 throw;
             }
         }
+
         /// <summary>
         /// 更新會員資料
         /// </summary>
-        /// <param name="id">會員 ID</param>
-        /// <param name="request">更新請求</param>
-        /// <returns>更新後的會員資料</returns>
         public async Task<MembersDto?> UpdateMemberAsync(string id, UpdateMemberRequestDto request)
         {
             try
             {
                 var member = await _context.Members.FirstOrDefaultAsync(m => m.Id == id);
-
                 if (member == null)
                 {
                     _logger.LogWarning("嘗試更新不存在的會員，ID: {Id}", id);
@@ -161,6 +150,7 @@ namespace VocabularyApi.Services
                 throw;
             }
         }
+
         /// <summary>
         /// 同步 Firebase 用戶到資料庫
         /// </summary>
@@ -168,17 +158,16 @@ namespace VocabularyApi.Services
         {
             try
             {
-                // ✅ 檢查會員是否存在（載入現有提供者）
                 var existingMember = await _context.Members
                     .Include(m => m.Providers)
                     .FirstOrDefaultAsync(m => m.Id == request.Id);
 
                 bool isNewUser = existingMember == null;
                 DateTime loginTime = ParseLoginTime(request.LastLoginAt);
+                bool actualEmailVerified = DetermineEmailVerified(request);
 
                 if (isNewUser)
                 {
-                    // ✅ 新會員：建立基本資料
                     var newMember = new Members
                     {
                         Id = request.Id,
@@ -196,33 +185,28 @@ namespace VocabularyApi.Services
 
                     _context.Members.Add(newMember);
                     _logger.LogInformation("創建新用戶: {UserId}, Email: {Email}", request.Id, request.Email);
-
-                    // ✅ 新增當前登入的提供者
-                    await AddProviderIfNotExists(request.Id, request.Provider, null);
                 }
                 else
                 {
                     // ✅ 現有會員：更新基本資料
                     existingMember.DisplayName = request.DisplayName ?? existingMember.DisplayName;
                     existingMember.PhotoURL = request.PhotoURL ?? existingMember.PhotoURL;
-                    existingMember.EmailVerified = request.EmailVerified;
+                    existingMember.EmailVerified = actualEmailVerified;
                     existingMember.UpdatedAt = DateTime.UtcNow;
                     existingMember.LastLoginAt = loginTime;
 
                     _context.Members.Update(existingMember);
                     _logger.LogInformation("更新用戶: {UserId}, Email: {Email}", request.Id, request.Email);
+                }
 
-                    // ✅ 檢查並新增當前登入的提供者（如果不存在）
-                    await AddProviderIfNotExists(request.Id, request.Provider, existingMember.Providers);
+                await SyncProvidersAsync(request.Id, request.Providers, existingMember?.Providers);
+
+                if (actualEmailVerified && !request.EmailVerified)
+                {
+                    await UpdateFirebaseEmailVerifiedAsync(request.Id, actualEmailVerified);
                 }
 
                 await _context.SaveChangesAsync();
-
-                // ✅ 回傳同步結果
-                var syncedProviders = await _context.MemberProviders
-                    .Where(p => p.Id == request.Id)
-                    .Select(p => p.Provider)
-                    .ToListAsync();
 
                 return new SyncUserResponseDto
                 {
@@ -240,44 +224,66 @@ namespace VocabularyApi.Services
         }
 
         /// <summary>
-        /// 檢查並新增提供者（如果不存在）
+        /// 同步 Providers 到資料庫
         /// </summary>
-        /// <param name="memberId">會員 ID</param>
-        /// <param name="provider">提供者名稱</param>
-        /// <param name="existingProviders">現有提供者列表</param>
-        private async Task AddProviderIfNotExists(string memberId, string provider, ICollection<MemberProvider>? existingProviders)
+        private async Task SyncProvidersAsync(string memberId, List<ProviderInfoDto> requestProviders, ICollection<MemberProviders>? existingProviders)
         {
-            if (string.IsNullOrEmpty(provider))
+            if (requestProviders == null || requestProviders.Count == 0)
             {
-                _logger.LogWarning("Provider 為空，跳過新增，會員 ID: {MemberId}", memberId);
+                _logger.LogWarning("Providers 列表為空，跳過同步，會員 ID: {MemberId}", memberId);
                 return;
             }
 
-            // ✅ 標準化提供者名稱
-            var standardProvider = DetermineProvider(provider);
-            var providerId = ExtractProviderId(provider);
+            List<MemberProviders> dbProviders;
 
-            // ✅ 檢查是否已存在此提供者
-            bool providerExists = existingProviders?.Any(p => p.Provider == standardProvider) == true;
-
-            if (!providerExists)
+            if (existingProviders != null && existingProviders.Count > 0)
             {
-                // ✅ 不存在：新增提供者
-                var memberProvider = new MemberProvider
-                {
-                    Id = memberId,
-                    Provider = standardProvider,
-                    ProviderId = providerId,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _context.MemberProviders.Add(memberProvider);
-                _logger.LogInformation("新增提供者: {MemberId} - {Provider}", memberId, standardProvider);
+                dbProviders = existingProviders.ToList();
             }
             else
             {
-                // ✅ 已存在：記錄日誌（不重複新增）
-                _logger.LogDebug("提供者已存在，跳過新增: {MemberId} - {Provider}", memberId, standardProvider);
+                dbProviders = await _context.MemberProviders
+                    .Where(p => p.Id == memberId)
+                    .ToListAsync();
+            }
+
+            var existingProviderIds = dbProviders.Select(p => p.ProviderId).ToHashSet();
+
+            // ✅ 新增不存在的 providers
+            foreach (var provider in requestProviders)
+            {
+                // 標準化 provider
+                var standardProvider = DetermineProvider(provider.Provider);
+                var standardProviderId = string.IsNullOrEmpty(provider.ProviderId)
+                    ? ExtractProviderId(provider.Provider)
+                    : provider.ProviderId;
+
+                if (!existingProviderIds.Contains(standardProviderId))
+                {
+                    var newProvider = new MemberProviders
+                    {
+                        Id = memberId,
+                        Provider = standardProvider,
+                        ProviderId = standardProviderId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.MemberProviders.Add(newProvider);
+                    _logger.LogInformation(
+                        "新增 Provider: {Provider} ({ProviderId}) for User: {UserId}",
+                        standardProvider,
+                        standardProviderId,
+                        memberId
+                    );
+                }
+                else
+                {
+                    _logger.LogDebug(
+                        "Provider 已存在，跳過新增: {ProviderId} for User: {UserId}",
+                        standardProviderId,
+                        memberId
+                    );
+                }
             }
         }
 
@@ -292,6 +298,7 @@ namespace VocabularyApi.Services
             }
             return DateTime.UtcNow;
         }
+
         /// <summary>
         /// 標準化提供者名稱
         /// </summary>
@@ -304,6 +311,8 @@ namespace VocabularyApi.Services
                 "google.com" => "google",
                 "facebook" => "facebook",
                 "facebook.com" => "facebook",
+                "apple" => "apple",
+                "apple.com" => "apple",
                 _ => "email"
             };
         }
@@ -318,8 +327,79 @@ namespace VocabularyApi.Services
                 "email" => "password",
                 "google" => "google.com",
                 "facebook" => "facebook.com",
+                "apple" => "apple.com",
                 _ => "password"
             };
+        }
+
+        /// <summary>
+        /// 檢查email是否已verified
+        /// </summary>
+        private bool DetermineEmailVerified(SyncUserRequestDto request)
+        {
+            // ✅ 規則：只要有任何受信任的 provider，就視為已驗證
+            var trustedProviders = new[] { "google", "facebook", "apple" };
+
+            bool hasTrustedProvider = request.Providers.Any(p =>
+                trustedProviders.Contains(p.Provider.ToLower())
+            );
+
+            if (hasTrustedProvider)
+            {
+                _logger.LogInformation(
+                    "✅ 用戶 {UserId} 有受信任的 provider，設定 emailVerified = true",
+                    request.Id
+                );
+                return true;
+            }
+
+            return request.EmailVerified;
+        }
+
+        /// <summary>
+        /// 更新 Firebase Auth 的 emailVerified 狀態
+        /// </summary>
+        private async Task UpdateFirebaseEmailVerifiedAsync(string uid, bool emailVerified)
+        {
+            try
+            {
+                var auth = FirebaseAuth.DefaultInstance;
+
+                var userRecord = await auth.GetUserAsync(uid);
+
+                if (userRecord.EmailVerified == emailVerified)
+                {
+                    _logger.LogDebug("Firebase emailVerified 已是 {Status}，無需更新", emailVerified);
+                    return;
+                }
+
+                var args = new UserRecordArgs
+                {
+                    Uid = uid,
+                    EmailVerified = emailVerified
+                };
+
+                await auth.UpdateUserAsync(args);
+
+                _logger.LogInformation(
+                    "✅ Firebase emailVerified 已更新為 {Status}，用戶: {UserId}",
+                    emailVerified,
+                    uid
+                );
+            }
+            catch (FirebaseAuthException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "❌ 更新 Firebase emailVerified 失敗，用戶: {UserId}, 錯誤: {ErrorCode}",
+                    uid,
+                    ex.AuthErrorCode
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ 更新 Firebase emailVerified 時發生未預期錯誤，用戶: {UserId}", uid);
+            }
         }
 
         /// <summary>
@@ -346,9 +426,7 @@ namespace VocabularyApi.Services
                     ProviderId = p.ProviderId,
                     CreatedAt = p.CreatedAt
                 }).ToList() ?? new List<MemberProvidersDto>()
-
             };
-
         }
     }
 }

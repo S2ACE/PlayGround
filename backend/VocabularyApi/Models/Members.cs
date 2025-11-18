@@ -1,5 +1,4 @@
-﻿// Models/Members.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VocabularyApi.Models
@@ -47,6 +46,10 @@ namespace VocabularyApi.Models
         public DateTime? LastLoginAt { get; set; }
 
         // ✅ EF Core 看到這個屬性，知道 Member 有多個 MemberProvider
-        public virtual ICollection<MemberProvider> Providers { get; set; } = new List<MemberProvider>();
+        public virtual ICollection<MemberProviders> Providers { get; set; } = new List<MemberProviders>();
+
+        public virtual ICollection<FavouriteVocabulary> FavouriteVocabulary { get; set; } = new List<FavouriteVocabulary>();
+
+        public virtual ICollection<VocabularyProgress> VocabularyProgress { get; set; } = new List<VocabularyProgress>();
     }
 }

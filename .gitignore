@@ -98,3 +98,4 @@ Thumbs.db
 # env files
 .env
 .env.local
+/backend/VocabularyApi/.vs

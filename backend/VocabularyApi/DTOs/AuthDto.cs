@@ -1,5 +1,4 @@
-﻿// DTOs/CheckEmailDto.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace VocabularyApi.DTOs
 {

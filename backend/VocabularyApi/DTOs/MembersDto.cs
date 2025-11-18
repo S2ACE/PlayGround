@@ -1,5 +1,4 @@
-﻿// DTOs/MembersDto.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace VocabularyApi.DTOs
 {
@@ -43,9 +42,17 @@ namespace VocabularyApi.DTOs
 
         public string Role { get; set; } = "user";
 
-        public string Provider { get; set; } = string.Empty;
         public bool DarkMode { get; set; } = false;
+
+        public List<ProviderInfoDto> Providers { get; set; } = new List<ProviderInfoDto>();
     }
+
+    public class ProviderInfoDto
+    {
+        public string Provider { get; set; } = string.Empty;
+        public string ProviderId { get; set; } = string.Empty;
+    }
+
 
     public class SyncUserResponseDto
     {

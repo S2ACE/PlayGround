@@ -1,7 +1,8 @@
-﻿// Controllers/AuthController.cs
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VocabularyApi.Services;
 using VocabularyApi.DTOs;
+
 
 namespace VocabularyApi.Controllers
 {

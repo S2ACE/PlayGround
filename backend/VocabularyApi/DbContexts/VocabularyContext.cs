@@ -9,7 +9,11 @@ namespace VocabularyApi.DbContexts
 
         public DbSet<Members> Members { get; set; }
 
-        public DbSet<MemberProvider> MemberProviders { get; set; }
+        public DbSet<MemberProviders> MemberProviders { get; set; }
+
+        public DbSet<FavouriteVocabulary> FavouriteVocabulary { get; set; }
+
+        public DbSet<VocabularyProgress> VocabularyProgress { get; set; }
 
         public VocabularyContext(DbContextOptions<VocabularyContext> options) : base(options) 
         {
@@ -20,7 +24,7 @@ namespace VocabularyApi.DbContexts
             base.OnModelCreating(modelBuilder);
 
             // ✅ 配置 MemberProvider 實體
-            modelBuilder.Entity<MemberProvider>(entity =>
+            modelBuilder.Entity<MemberProviders>(entity =>
             {
                 // 複合主鍵
                 entity.HasKey(e => new { e.Id, e.Provider });
@@ -43,6 +47,41 @@ namespace VocabularyApi.DbContexts
                       .OnDelete(DeleteBehavior.Cascade);
             });
             */
+            modelBuilder.Entity<FavouriteVocabulary>(entity =>
+            {
+                entity.HasKey(e => new { e.MemberId, e.VocabularyId });
+
+                entity.HasOne(f => f.Member)
+                    .WithMany(m => m.FavouriteVocabulary)
+                    .HasForeignKey(f => f.MemberId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(f => f.Vocabulary)
+                    .WithMany(v => v.FavouritedBy)
+                    .HasForeignKey(f => f.VocabularyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+            });
+
+            modelBuilder.Entity<VocabularyProgress>(entity =>
+            {
+                entity.HasKey(e => new { e.MemberId, e.VocabularyId });
+
+                // 與 Members 的關係
+                entity.HasOne(vp => vp.Member)
+                    .WithMany(m => m.VocabularyProgress)
+                    .HasForeignKey(vp => vp.MemberId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // 與 Vocabulary 的關係
+                entity.HasOne(vp => vp.Vocabulary)
+                    .WithMany(v => v.ProgressRecords)
+                    .HasForeignKey(vp => vp.VocabularyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+            });
+
+
         }
     }
 }

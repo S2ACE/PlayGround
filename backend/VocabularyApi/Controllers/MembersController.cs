@@ -1,10 +1,13 @@
-﻿// Controllers/MembersController.cs
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VocabularyApi.Services;
 using VocabularyApi.DTOs;
+using VocabularyApi.Services;
 
 namespace VocabularyApi.Controllers
 {
+    /// <summary>
+    /// Member API
+    /// </summary>
     [ApiController]
     [Route("api/members")]
     public class MembersController : ControllerBase
@@ -24,8 +27,10 @@ namespace VocabularyApi.Controllers
         /// <param name="id">會員 ID</param>
         /// <returns>會員資料</returns>
         [HttpGet("{id}")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MembersDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<MembersDto>> GetMemberById(string id)
@@ -33,6 +38,13 @@ namespace VocabularyApi.Controllers
             if (string.IsNullOrWhiteSpace(id))
             {
                 return BadRequest("ID cannot be empty.");
+            }
+
+            var userId = User.FindFirst("user_id")?.Value;
+            if (userId != id)
+            {
+                _logger.LogWarning("未授權存取會員資料: UserId={UserId}, RequestedId={Id}", userId, id);
+                return Forbid();
             }
 
             try
@@ -95,8 +107,10 @@ namespace VocabularyApi.Controllers
         /// <param name="request">更新請求</param>
         /// <returns>更新後的會員資料</returns>
         [HttpPut("{id}")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MembersDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<MembersDto>> UpdateMember(string id, [FromBody] UpdateMemberRequestDto request)
@@ -104,6 +118,13 @@ namespace VocabularyApi.Controllers
             if (string.IsNullOrWhiteSpace(id))
             {
                 return BadRequest("ID cannot be empty.");
+            }
+
+            var userId = User.FindFirst("user_id")?.Value;
+            if (userId != id)
+            {
+                _logger.LogWarning("未授權更新會員資料: UserId={UserId}, RequestedId={Id}", userId, id);
+                return Forbid();
             }
 
             if (!ModelState.IsValid)

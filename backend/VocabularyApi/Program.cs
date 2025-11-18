@@ -8,6 +8,8 @@ using Google.Apis.Auth.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddMemoryCache();
+
 //初始化 Firebase Admin SDK
 FirebaseApp.Create(new AppOptions()
 {
@@ -25,6 +27,8 @@ builder.Services.AddDbContext<VocabularyContext>(options =>
 
 builder.Services.AddScoped<VocabularyService>();
 builder.Services.AddScoped<MembersService>();
+builder.Services.AddScoped<FavouriteVocabularyService>();
+builder.Services.AddScoped<VocabularyProgressService>();
 
 // 設定 Firebase JWT 驗證
 var firebaseProjectId = builder.Configuration["Firebase:ProjectId"]; // 從 appsettings.json 讀取
