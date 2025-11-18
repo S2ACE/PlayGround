@@ -6,9 +6,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "node src/test.js",
-    "start": "node src/test.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -19,7 +17,6 @@
     "@types/firebase": "^2.4.32",
     "clsx": "^2.1.1",
     "firebase": "^12.4.0",
-    "playwright": "^1.56.0",
     "react": "^19.1.0",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.1.0",
