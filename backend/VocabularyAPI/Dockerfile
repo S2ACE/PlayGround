@@ -30,4 +30,4 @@ COPY --from=publish /app/publish .
 ENV ASPNETCORE_URLS=http://+:${PORT}
 
 # 啟動應用
-ENTRYPOINT ["dotnet", "VocabularyApi.dll"]
+ENTRYPOINT ["dotnet", "VocabularyAPI.dll"]

@@ -7,6 +7,9 @@
     <UserSecretsId>e6564564-65d2-4bd2-b100-639d69d0f86c</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
+    
+    <AssemblyName>VocabularyAPI</AssemblyName>
+    <RootNamespace>VocabularyAPI</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
