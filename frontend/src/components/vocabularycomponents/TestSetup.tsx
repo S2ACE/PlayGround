@@ -23,7 +23,7 @@ import { KeyboardArrowLeft } from '@mui/icons-material';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { useNavigate } from 'react-router-dom';
-import { getAllVocabulary, getAllLevels, type Vocabulary } from '../../api/vocabularyApi';
+import { vocabularyService, type Vocabulary } from '../../services/VocabularyService';
 
 export type ProficiencyLevel = 'mastered' | 'somewhat_familiar' | 'not_familiar';
 
@@ -119,9 +119,9 @@ const TestSetup = () : JSX.Element => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const data = await getAllVocabulary('en');
+                const data = await vocabularyService.getAllVocabulary('en');
                 setVocabularyData(data);
-                const availableLevels = getAllLevels(data);
+                const availableLevels = vocabularyService.getAllLevels(data);
                 setLevels(availableLevels);
             } catch (error) {
                 console.error('Failed to fetch vocabulary:', error);

@@ -1,7 +1,6 @@
-// src/services/VocabularyProgressService.ts
 import { auth } from '../firebase/config';
+import { API_ENDPOINTS } from '../config/api';
 
-const API_BASE_URL = '/api/progress';
 const LOCALSTORAGE_KEY = 'vocabularyProgress';
 
 // ==================== Types ====================
@@ -131,7 +130,7 @@ export class VocabularyProgressService {
             if (!user) throw new Error('用戶未登入');
 
             const idToken = await user.getIdToken();
-            const response = await fetch(`${API_BASE_URL}/${user.uid}`, {
+            const response = await fetch(`${API_ENDPOINTS.PROGRESS}/${user.uid}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${idToken}`,
@@ -158,7 +157,7 @@ export class VocabularyProgressService {
             if (!user) throw new Error('用戶未登入');
 
             const idToken = await user.getIdToken();
-            const response = await fetch(`${API_BASE_URL}/${user.uid}`, {
+            const response = await fetch(`${API_ENDPOINTS.PROGRESS}/${user.uid}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${idToken}`,
@@ -233,7 +232,7 @@ export class VocabularyProgressService {
         if (user) {
             try {
                 const idToken = await user.getIdToken();
-                const response = await fetch(`${API_BASE_URL}/${user.uid}/batch`, {
+                const response = await fetch(`${API_ENDPOINTS.PROGRESS}/${user.uid}/batch`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${idToken}`,
@@ -279,7 +278,7 @@ export class VocabularyProgressService {
 
         try {
             const idToken = await user.getIdToken();
-            await fetch(`${API_BASE_URL}/${user.uid}/all`, {
+            await fetch(`${API_ENDPOINTS.PROGRESS}/${user.uid}/all`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${idToken}`,

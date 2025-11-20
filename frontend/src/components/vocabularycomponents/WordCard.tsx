@@ -2,7 +2,7 @@ import { Card, CardContent, Typography, Box, IconButton, Chip, Divider } from '@
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useState } from 'react';
-import type { Vocabulary } from '../../api/vocabularyApi';
+import type { Vocabulary } from '../../services/VocabularyService';
 import type { JSX } from 'react';
 import filledHeartImg from "../../assets/filled_heart.png";
 import emptyHeartImg from "../../assets/empty_heart.png";

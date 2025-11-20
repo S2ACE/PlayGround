@@ -1,9 +1,8 @@
-// TestSession.tsx - 修正版
 import { useState, useEffect, type JSX } from 'react';
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import WordCard from './WordCard';
-import { getAllVocabulary, type Vocabulary } from '../../api/vocabularyApi';
+import { vocabularyService, type Vocabulary } from '../../services/VocabularyService';
 import type { TestConfig, VocabularyProgress, ProficiencyLevel } from './TestSetup';
 import { favouriteService } from '../../services/FavouriteService';
 import { vocabularyProgressService } from '../../services/VocabularyProgressService';
@@ -82,7 +81,7 @@ const TestSession = (): JSX.Element => {
 
         const loadVocabularies = async () => {
             try {
-                const vocabularyData = await getAllVocabulary('en');
+                const vocabularyData = await vocabularyService.getAllVocabulary('en');
                 const filteredVocabularies = filterVocabularies(vocabularyData, config, progress);
                 console.log('篩選後的單字數量:', filteredVocabularies.length);
                 setTestVocabularies(shuffleArray(filteredVocabularies));

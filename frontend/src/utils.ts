@@ -1,4 +1,4 @@
-import type { Vocabulary } from "./api/vocabularyApi"
+import type { Vocabulary } from "./services/VocabularyService"
 
 export function getRandomWord(list: Vocabulary[]): string {
     if (list.length === 0){

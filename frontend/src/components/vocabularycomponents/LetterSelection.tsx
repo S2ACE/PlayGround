@@ -2,7 +2,7 @@ import { Grid, Box, Card, CardContent, Typography, Button } from '@mui/material'
 import { KeyboardArrowLeft } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAllVocabulary, type Vocabulary } from '../../api/vocabularyApi';
+import { vocabularyService, type Vocabulary } from '../../services/VocabularyService';
 import type { JSX } from 'react';
 
 interface WordGroup {
@@ -24,7 +24,7 @@ const LetterSelection = (): JSX.Element => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const data = await getAllVocabulary('en');
+                const data = await vocabularyService.getAllVocabulary('en');
                 
                 if (level) {
                     const groups = createWordGroups(data, level);

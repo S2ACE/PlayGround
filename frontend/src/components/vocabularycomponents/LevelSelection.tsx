@@ -1,8 +1,7 @@
-// LevelSelection.tsx (修改版本)
 import { Grid, Box, Card, CardContent, Typography, Button } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllVocabulary, getAllLevels, type Vocabulary } from '../../api/vocabularyApi';
+import { vocabularyService, type Vocabulary } from '../../services/VocabularyService';
 import type { JSX } from 'react';
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -16,9 +15,9 @@ const LevelSelection = (): JSX.Element => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const data = await getAllVocabulary('en');
+                const data = await vocabularyService.getAllVocabulary('en');
                 setVocabularyData(data);
-                const availableLevels = getAllLevels(data);
+                const availableLevels = vocabularyService.getAllLevels(data);
                 setLevels(availableLevels);
                 setLoading(false);
             } catch (error) {

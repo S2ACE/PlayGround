@@ -1,7 +1,8 @@
 import { auth } from '../firebase/config';
+import { API_ENDPOINTS } from '../config/api';
+
 
 const LOCALSTORAGE_KEY = 'favouriteVocab';
-const API_BASE_URL = '/api/favourites';
 
 export interface FavouriteVocabularyResponse {
     vocabularyIds: number[];
@@ -72,7 +73,7 @@ export class FavouriteService {
             if (!user) throw new Error('用戶未登入');
 
             const idToken = await user.getIdToken();
-            const response = await fetch(`${API_BASE_URL}/${user.uid}`, {
+            const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${idToken}`,
@@ -95,7 +96,7 @@ export class FavouriteService {
         if (!user) throw new Error('用戶未登入');
 
         const idToken = await user.getIdToken();
-        const response = await fetch(`${API_BASE_URL}/${user.uid}`, {
+        const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${idToken}`,
@@ -115,7 +116,7 @@ export class FavouriteService {
         if (!user) throw new Error('用戶未登入');
 
         const idToken = await user.getIdToken();
-        const response = await fetch(`${API_BASE_URL}/${user.uid}/${vocabularyId}`, {
+        const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}/${vocabularyId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${idToken}`,
@@ -170,7 +171,7 @@ export class FavouriteService {
         console.log('🔄 ocalStorage 長度:', localFavouriteIds.length);
         try {
             const idToken = await user.getIdToken();
-            const response = await fetch(`${API_BASE_URL}/${user.uid}/sync`, {
+            const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}/sync`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${idToken}`,
@@ -196,7 +197,7 @@ export class FavouriteService {
                 if (!user) return false;
 
                 const idToken = await user.getIdToken();
-                const response = await fetch(`${API_BASE_URL}/${user.uid}/check/${vocabularyId}`, {
+                const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}/check/${vocabularyId}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${idToken}`,

@@ -14,9 +14,7 @@ import {
     type User
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
-
-const API_AUTH_BASE_URL = '/api/auth/';
-const API_MEMBERS_BASE_URL = '/api/members';
+import { API_ENDPOINTS } from '../config/api';
 
 export class AuthService {
     private googleProvider = new GoogleAuthProvider();
@@ -146,7 +144,7 @@ export class AuthService {
             // 2. 呼叫後端 API 更新資料庫
             const idToken = await currentUser.getIdToken();
             
-            const response = await fetch(`${API_MEMBERS_BASE_URL}/${currentUser.uid}`, {
+            const response = await fetch(`${API_ENDPOINTS.MEMBERS}/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -328,7 +326,7 @@ export class AuthService {
         provider?: string;
     }> {
         try {
-            const response = await fetch(API_AUTH_BASE_URL + 'check-email', {
+            const response = await fetch(`${API_ENDPOINTS.AUTH}/check-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -405,7 +403,7 @@ export class AuthService {
         console.log('🔄 同步用戶到資料庫:', userData);
         try {
             const idToken = await user.getIdToken();
-            const response = await fetch(API_AUTH_BASE_URL + 'sync', {
+            const response = await fetch(`${API_ENDPOINTS.AUTH}/sync`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -491,5 +489,4 @@ export class AuthService {
     }
 }
 
-// 導出單例實例
 export const authService = new AuthService();

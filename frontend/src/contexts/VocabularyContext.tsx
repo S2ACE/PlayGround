@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode, type JSX } from 'react';
-import { getAllVocabulary, type Vocabulary } from '../api/vocabularyApi';
+import { vocabularyService, type Vocabulary } from '../services/VocabularyService';
 import { getRandomWord } from '../utils';
 
 type VocabularyContextType = {
@@ -34,7 +34,7 @@ export const VocabularyProvider = ({ children }: VocabularyProviderProps): JSX.E
         async function fetchVocabulary() {
             try {
                 setLoading(true);
-                const list = await getAllVocabulary('en');
+                const list = await vocabularyService.getAllVocabulary('en');
                 
                 if (mounted) {
                     setVocabList(list);

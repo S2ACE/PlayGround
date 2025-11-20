@@ -4,7 +4,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import { KeyboardArrowLeft } from '@mui/icons-material';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getAllVocabulary, type Vocabulary } from '../../api/vocabularyApi';
+import { vocabularyService, type Vocabulary } from '../../services/VocabularyService';
 import WordCard from './WordCard';
 import type { JSX } from 'react';
 import { favouriteService } from '../../services/FavouriteService';
@@ -65,7 +65,7 @@ const WordLearning = (): JSX.Element => {
         const fetchWords = async () => {
             try {
                 setLoading(true);
-                const allWords = await getAllVocabulary('en');
+                const allWords = await vocabularyService.getAllVocabulary('en');
                 
                 if (level && range) {
                     const [startStr, endStr] = range.split('-');
