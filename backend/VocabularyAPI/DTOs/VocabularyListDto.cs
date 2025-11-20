@@ -1,4 +1,4 @@
-﻿namespace VocabularyApi.DTOs
+﻿namespace VocabularyAPI.DTOs
 {
     public class VocabularyListDto
     {

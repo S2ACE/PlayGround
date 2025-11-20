@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace VocabularyApi.DTOs
+namespace VocabularyAPI.DTOs
 {
     public class AddFavouriteRequestDto
     {

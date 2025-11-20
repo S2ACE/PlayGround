@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabularyApi.DbContexts;
-using VocabularyApi.Models;
-using VocabularyApi.DTOs;
+using VocabularyAPI.DbContexts;
+using VocabularyAPI.Models;
+using VocabularyAPI.DTOs;
 using FirebaseAdmin.Auth;
 
-namespace VocabularyApi.Services
+namespace VocabularyAPI.Services
 {
     public class MembersService
     {

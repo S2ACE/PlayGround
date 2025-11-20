@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabularyApi.DbContexts;
-using VocabularyApi.DTOs;
-using VocabularyApi.Models;
+using VocabularyAPI.DbContexts;
+using VocabularyAPI.DTOs;
+using VocabularyAPI.Models;
 
-namespace VocabularyApi.Services
+namespace VocabularyAPI.Services
 {
     public class VocabularyProgressService
     {

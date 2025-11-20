@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using VocabularyApi.Services;
-using VocabularyApi.DTOs;
+using VocabularyAPI.Services;
+using VocabularyAPI.DTOs;
 
-namespace VocabularyApi.Controllers
+namespace VocabularyAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/vocab/{lang}")]

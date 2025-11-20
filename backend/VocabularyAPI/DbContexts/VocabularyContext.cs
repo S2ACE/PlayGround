@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabularyApi.Models;
+using VocabularyAPI.Models;
 
-namespace VocabularyApi.DbContexts
+namespace VocabularyAPI.DbContexts
 {
     public class VocabularyContext : DbContext
     {

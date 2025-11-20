@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VocabularyApi.DTOs;
-using VocabularyApi.Services;
+using VocabularyAPI.DTOs;
+using VocabularyAPI.Services;
 
-namespace VocabularyApi.Controllers
+namespace VocabularyAPI.Controllers
 {
     /// <summary>
     /// 單字學習進度 API

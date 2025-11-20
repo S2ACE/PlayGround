@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace VocabularyApi.Models
+namespace VocabularyAPI.Models
 {
     [Table("Members")]
     public class Members
