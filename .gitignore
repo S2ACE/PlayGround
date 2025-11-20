@@ -34,68 +34,62 @@ frontend/.env.*.local
 # Backend (.NET Core) - ASP.NET
 # ====================
 
-# Build results
-backend/[Bb]in/
-backend/[Oo]bj/
-backend/[Ll]og/
-backend/[Ll]ogs/
+# 🔧 修正:排除所有 bin/ 和 obj/ 資料夾 (包括子資料夾)
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
+**/[Ll]ogs/
 
 # User-specific files
-backend/*.rsuser
-backend/*.suo
-backend/*.user
-backend/*.userosscache
-backend/*.sln.docstates
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
 # Visual Studio cache/options
-backend/.vs/
-backend/.vscode/
+.vs/
+**/.vs/
 
 # NuGet
-backend/packages/
-backend/.nupkg
-backend/*.nupkg
-backend/*.snupkg
-backend/**/packages/*
-backend/!**/packages/build/
+packages/
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
 
 # .NET Core
-backend/project.lock.json
-backend/project.fragment.lock.json
-backend/artifacts/
+project.lock.json
+project.fragment.lock.json
+artifacts/
 
 # Firebase Admin SDK
-backend/**/firebase-adminsdk*.json
-backend/**/serviceAccountKey.json
-backend/**/*-adminsdk-*.json
+**/firebase-adminsdk*.json
+**/serviceAccountKey.json
+**/*-adminsdk-*.json
 
 # appsettings with secrets
-backend/**/appsettings.Development.json
-backend/**/appsettings.Production.json
-backend/**/appsettings.*.json
-backend/**/secrets.json
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/appsettings.*.json
+!**/appsettings.json
+**/secrets.json
 
-# Entity Framework
-backend/**/Migrations/
-
-# Rider IDE
-backend/.idea/
-backend/**/*.sln.iml
-
-# Visual Studio Code
-backend/.vscode/
-
-.DS_Store
-Thumbs.db
+# Entity Framework Migrations (通常應該保留,註解掉)
+# **/Migrations/
 
 # IDE
-.vscode/
 .idea/
+**/*.sln.iml
 *.swp
 *.swo
 *~
 
-# env files
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment files
 .env
 .env.local
-/backend/VocabularyApi/.vs
+.env.*.local
