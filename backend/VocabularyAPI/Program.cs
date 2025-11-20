@@ -103,10 +103,17 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+var enableSwagger = Environment.GetEnvironmentVariable("ENABLE_SWAGGER") == "true"
+    || app.Environment.IsDevelopment();
+
+if (enableSwagger)
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "VocabularyAPI v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 // Railway 不需要 HTTPS redirect
