@@ -1,0 +1,7 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "backend/VocabularyApi/Dockerfile"
+dockerContext = "backend/VocabularyApi"
+
+[deploy]
+startCommand = "dotnet VocabularyApi.dll"

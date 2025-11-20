@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VocabularyApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3a0da98e3a3f7e0ad3cecabf17ce444740f5cbe2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a61a134e597124e2a21fd9354b4c532cb46b9a6")]
 [assembly: System.Reflection.AssemblyProductAttribute("VocabularyApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VocabularyApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
