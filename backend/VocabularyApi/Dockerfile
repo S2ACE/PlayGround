@@ -11,15 +11,15 @@ WORKDIR /src
 COPY . .
 
 # 🔧 修正:指定專案檔名稱
-RUN dotnet restore "VocabularyApi.csproj"
+RUN dotnet restore "VocabularyAPI.csproj"
 
 # 🔧 修正:指定專案檔名稱
-RUN dotnet build "VocabularyApi.csproj" -c Release -o /app/build
+RUN dotnet build "VocabularyAPI.csproj" -c Release -o /app/build
 
 # Publish 階段:打包
 FROM build AS publish
 # 🔧 修正:指定專案檔名稱
-RUN dotnet publish "VocabularyApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "VocabularyAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Final 階段:最終映像
 FROM base AS final
