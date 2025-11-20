@@ -4,4 +4,4 @@ dockerfilePath = "backend/VocabularyAPI/Dockerfile"
 dockerContext = "backend/VocabularyAPI"
 
 [deploy]
-startCommand = "dotnet VocabularyApi.dll"
+startCommand = "dotnet VocabularyAPI.dll"
