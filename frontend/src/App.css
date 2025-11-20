@@ -1,0 +1,13 @@
+@font-face {
+  font-family: 'Cubic11';
+  src: url('./assets/fonts/Cubic_11.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+body, * {
+  font-family: 'Cubic11', monospace !important;
+}
+
+html, body {
+  background-color: #242424 !important;
+}

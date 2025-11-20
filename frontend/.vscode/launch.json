@@ -1,0 +1,24 @@
+// .vscode/launch.json
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "type": "chrome",              // 或 "msedge"
+            "request": "launch",
+            "name": "Debug React App",
+            "url": "http://localhost:5173", // ✅ Vite 預設 port
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "/*": "${webRoot}/*",
+                "/src/*": "${webRoot}/src/*"
+            },
+            "smartStep": true,
+            "skipFiles": [
+                "<node_internals>/**",
+                "node_modules/**"
+            ]
+        }
+    ]
+}
