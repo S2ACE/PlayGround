@@ -8,6 +8,9 @@ using VocabularyAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Services.AddMemoryCache();
 
 // Firebase 初始化 (支援環境變數和本地檔案)
