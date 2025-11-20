@@ -94,7 +94,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // health check
-app.MapGet("/", () => new
+app.MapGet("/health", () => new
 {
     status = "healthy",
     message = "VocabularyAPI is running",
