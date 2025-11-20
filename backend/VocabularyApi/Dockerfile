@@ -7,18 +7,19 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# 複製所有檔案 (因為 build context 已正確設定)
+# 複製所有檔案
 COPY . .
 
-# 還原 NuGet 套件
-RUN dotnet restore
+# 🔧 修正:指定專案檔名稱
+RUN dotnet restore "VocabularyApi.csproj"
 
-# 編譯專案
-RUN dotnet build -c Release -o /app/build
+# 🔧 修正:指定專案檔名稱
+RUN dotnet build "VocabularyApi.csproj" -c Release -o /app/build
 
 # Publish 階段:打包
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+# 🔧 修正:指定專案檔名稱
+RUN dotnet publish "VocabularyApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Final 階段:最終映像
 FROM base AS final
