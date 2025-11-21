@@ -6,23 +6,27 @@ namespace VocabularyAPI.Models
     [Table("vocabulary_progress")]
     public class VocabularyProgress
     {
-        [Key, Column(Order = 0)]
+        [Key, Column("member_id", Order = 0)]
         [Required]
         [StringLength(128)]
+
         public string MemberId { get; set; } = string.Empty;
 
-        [Key, Column(Order = 1)]
+        [Key, Column("vocabulary_id", Order = 1)]
         [Required]
         public int VocabularyId { get; set; }
 
         [Required]
         [Range(0, 3)]
+        [Column("mastered_count")]
         public int MasteredCount { get; set; } = 0;
 
         [Required]
+        [Column("last_test_date")]
         public DateTime LastTestDate { get; set; }
 
         [Required]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
