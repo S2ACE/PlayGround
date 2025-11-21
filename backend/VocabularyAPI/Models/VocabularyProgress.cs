@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VocabularyAPI.Models
 {
-    [Table("VocabularyProgress")]
+    [Table("vocabulary_progress")]
     public class VocabularyProgress
     {
         [Key, Column(Order = 0)]
@@ -22,13 +22,14 @@ namespace VocabularyAPI.Models
         [Required]
         public DateTime LastTestDate { get; set; }
 
+        [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
-        [ForeignKey("MemberId")]
+        [ForeignKey(nameof(MemberId))]
         public virtual Members? Member { get; set; }
 
-        [ForeignKey("VocabularyId")]
+        [ForeignKey(nameof(VocabularyId))]
         public virtual Vocabulary? Vocabulary { get; set; }
 
         // 計算屬性: 根據 MasteredCount 計算 CurrentProficiency

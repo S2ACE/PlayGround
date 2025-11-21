@@ -243,7 +243,7 @@ namespace VocabularyAPI.Services
             else
             {
                 dbProviders = await _context.MemberProviders
-                    .Where(p => p.Id == memberId)
+                    .Where(p => p.MemberId == memberId)
                     .ToListAsync();
             }
 
@@ -262,7 +262,7 @@ namespace VocabularyAPI.Services
                 {
                     var newProvider = new MemberProviders
                     {
-                        Id = memberId,
+                        MemberId = memberId,
                         Provider = standardProvider,
                         ProviderId = standardProviderId,
                         CreatedAt = DateTime.UtcNow

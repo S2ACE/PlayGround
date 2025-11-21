@@ -27,12 +27,12 @@ namespace VocabularyAPI.DbContexts
             modelBuilder.Entity<MemberProviders>(entity =>
             {
                 // 複合主鍵
-                entity.HasKey(e => new { e.Id, e.Provider });
+                entity.HasKey(e => new { e.MemberId, e.Provider });
 
                 // 外鍵關係
                 entity.HasOne(d => d.Member) // MemberProvider 有一個 Member
                       .WithMany(p => p.Providers) // Member 有多個 MemberProvider
-                      .HasForeignKey(d => d.Id)  // 注意：這裡是 Id，不是 MemberId 透過 Id 欄位關聯
+                      .HasForeignKey(d => d.MemberId)  // 注意：這裡是 Id，不是 MemberId 透過 Id 欄位關聯
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
