@@ -1,9 +1,10 @@
 ﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using VocabularyAPI.DbContexts;
-using Microsoft.EntityFrameworkCore;
+using VocabularyAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,12 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<VocabularyContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<VocabularyService>();
+builder.Services.AddScoped<MembersService>();
+builder.Services.AddScoped<FavouriteVocabularyService>();
+builder.Services.AddScoped<VocabularyProgressService>();
+
 
 // 🔧 關鍵:設定監聽 Railway 的 PORT
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
