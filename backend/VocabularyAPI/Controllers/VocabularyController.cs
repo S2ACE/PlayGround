@@ -5,7 +5,7 @@ using VocabularyAPI.DTOs;
 namespace VocabularyAPI.Controllers
 {
     [ApiController]
-    [Route("api/v1/vocab/{lang}")]
+    [Route("api/vocabulary/{lang}")]
     public class VocabularyController : ControllerBase
     {
         private readonly VocabularyService _service;
