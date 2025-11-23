@@ -42,7 +42,7 @@ namespace VocabularyAPI.DTOs
 
         public string Role { get; set; } = "user";
 
-        public bool DarkMode { get; set; } = false;
+        public bool DarkMode { get; set; } = true;
 
         public List<ProviderInfoDto> Providers { get; set; } = new List<ProviderInfoDto>();
     }
