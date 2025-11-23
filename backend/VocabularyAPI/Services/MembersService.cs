@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FirebaseAdmin.Auth;
+using Microsoft.EntityFrameworkCore;
 using VocabularyAPI.DbContexts;
-using VocabularyAPI.Models;
 using VocabularyAPI.DTOs;
-using FirebaseAdmin.Auth;
+using VocabularyAPI.Helper;
 
 namespace VocabularyAPI.Services
 {
@@ -163,7 +163,7 @@ namespace VocabularyAPI.Services
                     .FirstOrDefaultAsync(m => m.Id == request.Id);
 
                 bool isNewUser = existingMember == null;
-                DateTime loginTime = ParseLoginTime(request.LastLoginAt);
+                DateTime loginTime = DateTimeUtils.ParseLoginTime(request.LastLoginAt);
                 bool actualEmailVerified = DetermineEmailVerified(request);
 
                 if (isNewUser)
@@ -285,18 +285,6 @@ namespace VocabularyAPI.Services
                     );
                 }
             }
-        }
-
-        /// <summary>
-        /// 解析登入時間
-        /// </summary>
-        private DateTime ParseLoginTime(string lastLoginAt)
-        {
-            if (!string.IsNullOrEmpty(lastLoginAt) && DateTime.TryParse(lastLoginAt, out DateTime parsedTime))
-            {
-                return parsedTime;
-            }
-            return DateTime.UtcNow;
         }
 
         /// <summary>
