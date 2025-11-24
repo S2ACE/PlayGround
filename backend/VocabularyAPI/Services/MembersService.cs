@@ -165,7 +165,7 @@ namespace VocabularyAPI.Services
                 bool isNewUser = existingMember == null;
                 DateTime loginTime = DateTimeUtils.ParseLoginTime(request.LastLoginAt);
                 bool actualEmailVerified = DetermineEmailVerified(request);
-
+                loginTime = DateTime.SpecifyKind(loginTime, DateTimeKind.Utc);
                 if (isNewUser)
                 {
                     var newMember = new Members
