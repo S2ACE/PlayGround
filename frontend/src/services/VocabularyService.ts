@@ -1,4 +1,3 @@
-// services/VocabularyService.ts
 import { API_ENDPOINTS } from '../config/api';
 
 export type Vocabulary = {

@@ -1,4 +1,4 @@
-export const BASE_API_URL = import.meta.env.VITE_BASE_API_URL || 'http://localhost:5000';
+export const BASE_API_URL = import.meta.env.VITE_BASE_API_URL || 'https://localhost:44376';
 
 export const API_ENDPOINTS = {
   BASE: BASE_API_URL,

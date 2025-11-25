@@ -478,7 +478,7 @@ const Settings = (): JSX.Element | null => {
                                 {passwordError}
                             </Alert>
                         )}
-                        <Stack spacing={3}>
+                        <Stack spacing={2} sx = {{ mt: 2 }}>
                             <TextField
                                 label="新密碼"
                                 type="password"

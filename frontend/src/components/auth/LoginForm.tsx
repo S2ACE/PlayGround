@@ -1,4 +1,3 @@
-// src/components/Auth/LoginForm.tsx
 import { useState, type JSX } from 'react';
 import {
     Box,

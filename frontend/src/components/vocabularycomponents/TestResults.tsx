@@ -1,4 +1,3 @@
-// TestResults.tsx - 自動判斷 localStorage 或 Database
 import { useEffect, useState, type JSX } from 'react';
 import {
     Box,
