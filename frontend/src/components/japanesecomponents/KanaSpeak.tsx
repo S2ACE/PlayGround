@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { speakKana } from '../../utils';
+import { speakKanaSmart } from '../../utils';
 import { IconButton, type SxProps, type Theme } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
@@ -13,8 +13,8 @@ const KanaSpeak = ({ char, sx }: KanaSpeakProps): JSX.Element => {
         <>
             <IconButton
                 onClick={e => {
-                e.stopPropagation();
-                speakKana(char);
+                    e.stopPropagation();
+                    speakKanaSmart(char);
                 }}
                 size="small"
                 tabIndex={-1}

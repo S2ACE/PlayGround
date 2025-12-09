@@ -9,6 +9,7 @@ import emptyHeartImgLight from "../../assets/empty_heart_light.png";
 import filledHeartImgDark from "../../assets/filled_heart_dark.png";
 import emptyHeartImgDark from "../../assets/empty_heart_dark.png";
 import { useTheme } from '@mui/material/styles';
+import { speakEnglishSmart } from "../../utils";
 
 type WordCardProps = {
     word: Vocabulary;
@@ -45,19 +46,7 @@ const WordCard = ({
     const isFlipped = propIsFlipped !== undefined ? propIsFlipped : internalIsFlipped;
 
     const handlePlayAudio = (accent: 'en-US' | 'en-GB') => {
-        const utterance = new SpeechSynthesisUtterance(word.word);
-        utterance.lang = accent;
-        
-        const voices = speechSynthesis.getVoices();
-        const preferredVoice = voices.find(voice =>
-            voice.lang === accent || voice.lang.startsWith(accent.split('-')[0])
-        );
-        
-        if (preferredVoice) {
-            utterance.voice = preferredVoice;
-        }
-        
-        speechSynthesis.speak(utterance);
+        void speakEnglishSmart(word.word, accent);
     };
 
 	const filledHeartSrc =
