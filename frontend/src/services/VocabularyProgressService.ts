@@ -3,8 +3,6 @@ import { API_ENDPOINTS } from '../config/api';
 
 const LOCALSTORAGE_KEY = 'vocabularyProgress';
 
-// ==================== Types ====================
-
 export type ProficiencyLevel = 'mastered' | 'somewhat_familiar' | 'not_familiar';
 
 export interface VocabularyProgressData {
