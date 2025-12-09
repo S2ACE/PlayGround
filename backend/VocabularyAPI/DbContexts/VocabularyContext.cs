@@ -19,6 +19,20 @@ namespace VocabularyAPI.DbContexts
         {
 
         }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+
+            configurationBuilder
+                .Properties<DateTime>()
+                .HaveColumnType("timestamp with time zone");
+
+            configurationBuilder
+                .Properties<DateTime?>()
+                .HaveColumnType("timestamp with time zone");
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

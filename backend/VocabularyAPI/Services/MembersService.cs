@@ -165,7 +165,9 @@ namespace VocabularyAPI.Services
                 bool isNewUser = existingMember == null;
                 DateTime loginTime = DateTimeUtils.ParseLoginTime(request.LastLoginAt);
                 bool actualEmailVerified = DetermineEmailVerified(request);
-                loginTime = DateTime.SpecifyKind(loginTime, DateTimeKind.Utc);
+
+                Members targetMember;
+
                 if (isNewUser)
                 {
                     var newMember = new Members
@@ -185,10 +187,11 @@ namespace VocabularyAPI.Services
 
                     _context.Members.Add(newMember);
                     _logger.LogInformation("創建新用戶: {UserId}, Email: {Email}", request.Id, request.Email);
+                    targetMember = newMember;
                 }
                 else
                 {
-                    // ✅ 現有會員：更新基本資料
+
                     existingMember.DisplayName = request.DisplayName ?? existingMember.DisplayName;
                     existingMember.PhotoURL = request.PhotoURL ?? existingMember.PhotoURL;
                     existingMember.EmailVerified = actualEmailVerified;
@@ -197,6 +200,7 @@ namespace VocabularyAPI.Services
 
                     _context.Members.Update(existingMember);
                     _logger.LogInformation("更新用戶: {UserId}, Email: {Email}", request.Id, request.Email);
+                    targetMember = existingMember;
                 }
 
                 await SyncProvidersAsync(request.Id, request.Providers, existingMember?.Providers);

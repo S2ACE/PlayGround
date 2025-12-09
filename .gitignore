@@ -93,3 +93,5 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+/backend/VocabularyAPI/Program.cs
+/backend/VocabularyAPI/appsettings.json
