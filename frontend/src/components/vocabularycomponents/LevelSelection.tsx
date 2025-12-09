@@ -62,17 +62,16 @@ const LevelSelection = (): JSX.Element => {
                     variant="contained"
                     size="large"
                     onClick={handleTestMode}
-                    
-                    sx={{
-                        backgroundColor: '#ff9800',
-                        color: '#000000',
+                    sx={(theme) => ({
+                        backgroundColor: theme.palette.primary.light,
+                        color: theme.palette.primary.contrastText,
                         '&:hover': { backgroundColor: '#e65100' },
                         py: { xs: 1.5, sm: 2 },
                         px: { xs: 3, sm: 4 },
                         fontSize: { xs: '1rem', sm: '1.2rem' },
                         fontWeight: 'bold',
                         borderRadius: 3
-                    }}
+                    })}
                 >
                     🧠 開始測試模式
                 </Button>
@@ -82,22 +81,22 @@ const LevelSelection = (): JSX.Element => {
               {levels.map((level) => (
                   <Grid size={{ xs: 6, sm: 4 }} key={level}>
                   <Card
-                      sx={{
+                      sx={(theme) => ({
                         cursor: 'pointer',
                         transition: 'transform 0.2s',
                         '&:hover': {
                             transform: 'translateY(-4px)',
-                            backgroundColor: '#e65100',
+                            backgroundColor: theme.palette.primary.dark,
                         },
-                        backgroundColor: '#ff9800',                  
-                      }}
+                        backgroundColor: theme.palette.primary.light,                  
+                      })}
                       onClick={() => handleLevelSelect(level)}
                   >
                       <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                      <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#000000', textTransform: 'uppercase'}}>
+                      <Typography variant="h3" sx={(theme) => ({ fontWeight: 'bold', color: theme.palette.primary.contrastText, textTransform: 'uppercase'})}>
                           {level}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: '#666666', mt: 1 }}>
+                      <Typography variant="body2" sx={(theme) => ({ color: theme.palette.share.prompt, mt: 1 })}>
                           {getWordCountForLevel(level)} words
                       </Typography>
                       </CardContent>

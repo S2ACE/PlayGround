@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, type JSX } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, type JSX } from 'react';
 import {
     Box,
     Typography,
@@ -24,6 +24,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { useNavigate } from 'react-router-dom';
 import { vocabularyService, type Vocabulary } from '../../services/VocabularyService';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 export type ProficiencyLevel = 'mastered' | 'somewhat_familiar' | 'not_familiar';
 
@@ -61,8 +62,22 @@ const TestSetup = () : JSX.Element => {
 
     const [levels, setLevels] = useState<string[]>([]);
     const [vocabularyData, setVocabularyData] = useState<Vocabulary[]>([]);
-    const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const createGroupDisplayName = useCallback((words: Vocabulary[]): string => {
+        if (words.length === 0) return '';
+        
+        const firstWord = words[0];
+        const lastWord = words[words.length - 1];
+        const firstLetter = firstWord.word.charAt(0).toUpperCase();
+        const lastLetter = lastWord.word.charAt(0).toUpperCase();
+        
+        if (firstLetter === lastLetter) {
+            return firstLetter;
+        } else {
+            return `${firstLetter}-${lastLetter}`;
+        }
+    }, []);
 
     // 創建 word groups 的邏輯
     const createWordGroups = useCallback((data: Vocabulary[], currentLevel: string): WordGroup[] => {
@@ -100,21 +115,6 @@ const TestSetup = () : JSX.Element => {
         return groups;
     }, []);
 
-    const createGroupDisplayName = useCallback((words: Vocabulary[]): string => {
-        if (words.length === 0) return '';
-        
-        const firstWord = words[0];
-        const lastWord = words[words.length - 1];
-        const firstLetter = firstWord.word.charAt(0).toUpperCase();
-        const lastLetter = lastWord.word.charAt(0).toUpperCase();
-        
-        if (firstLetter === lastLetter) {
-            return firstLetter;
-        } else {
-            return `${firstLetter}-${lastLetter}`;
-        }
-    }, []);
-
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -133,15 +133,13 @@ const TestSetup = () : JSX.Element => {
         fetchData();
     }, []);
 
-    useEffect(() => {
-        if (config.level && vocabularyData.length > 0) {
-            const groups = createWordGroups(vocabularyData, config.level);
-            setWordGroups(groups);
-            setConfig(prev => ({ ...prev, selectedGroups: [] }));
-        } else {
-            setWordGroups([]);
-        }
-    }, [config.level, vocabularyData, createWordGroups]);
+    const wordGroups = useMemo(
+        () => {
+            if (!config.level || vocabularyData.length === 0) return [];
+            return createWordGroups(vocabularyData, config.level);
+        },
+        [config.level, vocabularyData, createWordGroups]
+    );
 
     // 優化的事件處理函數 - 使用 React.startTransition 來標記非緊急更新
     const handleLevelChange = useCallback((level: string) => {
@@ -202,16 +200,16 @@ const TestSetup = () : JSX.Element => {
     const getProficiencyColor = useCallback((level: ProficiencyLevel): string => {
         switch (level) {
             case 'mastered': return '#4caf50';
-            case 'somewhat_familiar': return '#ff9800';
+            case 'somewhat_familiar': return '#ED6C02';
             case 'not_familiar': return '#f44336';
         }
     }, []);
 
-    const getTotalSelectedWords = useCallback((): number => {
+    /*const getTotalSelectedWords = useCallback((): number => {
         return wordGroups
             .filter(group => config.selectedGroups.includes(group.groupIndex))
             .reduce((total, group) => total + group.wordCount, 0);
-    }, [wordGroups, config.selectedGroups]);
+    }, [wordGroups, config.selectedGroups]);*/
 
     const handleStartTest = useCallback(() => {
         if (!config.level) {
@@ -237,14 +235,7 @@ const TestSetup = () : JSX.Element => {
 
     if (loading) {
         return (
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                minHeight: '60vh' 
-            }}>
-                <Typography variant="h6">Loading...</Typography>
-            </Box>
+            <LoadingSpinner message="Loading" />
         );
     }
 
@@ -262,32 +253,20 @@ const TestSetup = () : JSX.Element => {
                 <Button
                     onClick={handleGoBack}
                     startIcon={<KeyboardArrowLeft />}
-                    sx={{
-                        color: '#ff9800',
+                    sx={(theme) => ({
+                        color: theme.palette.primary.main,
+                        borderColor: theme.palette.primary.main,
+                        border: 2,
+                        borderRadius: 2,
                         textTransform: 'none',
                         position: { sm: 'absolute' },
                         left: { xs: 0, sm: 0 },
                         mb: { xs: 1, sm: 0 },
                         minWidth: 'auto',
-                        // 完全移除所有 transition 和動畫
-                        transition: 'none',
-                        animation: 'none',
                         '&:hover': {
-                            backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                            transition: 'none',
-                        },
-                        '&:active': {
-                            backgroundColor: 'rgba(255, 152, 0, 0.2)',
-                            transform: 'scale(0.95)',
-                        },
-                        // 禁用所有 Material-UI 的內建動畫
-                        '&.MuiButtonBase-root': {
-                            transition: 'none',
+                            backgroundColor: theme.palette.button.hover,
                         }
-                    }}
-                    disableRipple={true}
-                    disableFocusRipple={true}
-                    disableTouchRipple={true}
+                    })}
                     aria-label="go back"
                 >
                     Back
@@ -307,20 +286,20 @@ const TestSetup = () : JSX.Element => {
             </Box>
 
             {/* 選擇等級 */}
-            <Card sx={{ 
+            <Card sx={(theme) => ({ 
                 mb: 3,
-                backgroundColor: '#ff9800',
+                backgroundColor: theme.palette.primary.light,
                 // 完全禁用所有動畫和過渡效果
                 transition: 'none',
                 animation: 'none',
                 transform: 'none',
-            }}>
+            })}>
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                     <Typography 
                         variant="h6" 
                         sx={{ 
                             mb: 2, 
-                            color: '#000000',
+                            color: 'primary.contrastText',
                             fontWeight: 'bold',
                             fontSize: { xs: '1.1rem', sm: '1.25rem' }
                         }}
@@ -330,8 +309,8 @@ const TestSetup = () : JSX.Element => {
                     <FormControl fullWidth>
                         <InputLabel 
                             sx={{ 
-                                color: '#000000',
-                                '&.Mui-focused': { color: '#000000' }
+                                color: 'primary.contrastText',
+                                '&.Mui-focused': { color: 'primary.contrastText' }
                             }}
                         >
                             等級
@@ -340,29 +319,34 @@ const TestSetup = () : JSX.Element => {
                             value={config.level}
                             label="等級"
                             onChange={(e) => handleLevelChange(e.target.value)}
-                            sx={{
+                            sx={(theme) => ({
                                 backgroundColor: 'white',
+                                 color: theme.palette.primary.contrastText,
                                 transition: 'none',  // 完全移除 transition
+                                '& .MuiSelect-icon': {
+                                color: theme.palette.primary.contrastText,
+                                },                                
                                 '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#000000',
+                                    borderColor: theme.palette.primary.contrastText,
                                     transition: 'none',
                                 },
                                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#000000',
+                                    borderColor: theme.palette.primary.contrastText,
                                 },
                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#000000',
+                                    borderColor: theme.palette.primary.contrastText,
                                 },
                                 // 禁用所有 Material-UI Select 的內建動畫
                                 '& .MuiSelect-select': {
                                     transition: 'none',
                                 }
-                            }}
+                            })}
                             MenuProps={{
                                 slotProps: {
                                     paper: {
                                         sx: {
                                             '& .MuiMenuItem-root': {
+                                                
                                                 transition: 'none',
                                                 '&:hover': {
                                                     backgroundColor: 'rgba(255, 152, 0, 0.1)',
@@ -388,7 +372,7 @@ const TestSetup = () : JSX.Element => {
             {config.level && wordGroups.length > 0 && (
                 <Card sx={{ 
                     mb: 3,
-                    backgroundColor: '#ff9800',
+                    backgroundColor: 'primary.light',
                     transition: 'none',
                     animation: 'none',
                 }}>
@@ -399,7 +383,7 @@ const TestSetup = () : JSX.Element => {
                             alignItems: 'center',
                             mb: 2 
                         }}>
-                            <Typography 
+                            <Typography /*{config.selectedGroups.length > 0 && `(已選 ${getTotalSelectedWords()} 個單字)`}*/
                                 variant="h6" 
                                 sx={{ 
                                     color: '#000000',
@@ -407,7 +391,7 @@ const TestSetup = () : JSX.Element => {
                                     fontSize: { xs: '1.1rem', sm: '1.25rem' }
                                 }}
                             >
-                                選擇單字組 {config.selectedGroups.length > 0 && `(已選 ${getTotalSelectedWords()} 個單字)`}
+                                選擇單字組
                             </Typography>
                             <Button
                                 size="small"
@@ -434,103 +418,11 @@ const TestSetup = () : JSX.Element => {
                         </Box>
                         
                         {/* List 格式的單字組選擇 - 完全無動畫版本 */}
-                        <List 
-                            sx={{ 
-                                backgroundColor: 'white',
-                                borderRadius: 2,
-                                border: '1px solid #000000',
-                                maxHeight: 300,
-                                overflow: 'auto',
-                                '&::-webkit-scrollbar': {
-                                    width: '4px',
-                                },
-                                '&::-webkit-scrollbar-track': {
-                                    background: 'transparent',
-                                },
-                                '&::-webkit-scrollbar-thumb': {
-                                    background: 'rgba(255, 152, 0, 0.3)',
-                                    borderRadius: '2px',
-                                },
-                            }}
-                        >
-                            {wordGroups.map((group, index) => {
-                                const isSelected = config.selectedGroups.includes(group.groupIndex);
-                                return (
-                                    <React.Fragment key={group.groupIndex}>
-                                        <ListItem disablePadding>
-                                            <ListItemButton 
-                                                onClick={() => handleGroupToggle(group.groupIndex)}
-                                                sx={{
-                                                    backgroundColor: isSelected ? 'rgba(255, 152, 0, 0.15)' : 'transparent',                                                   
-                                                    transition: 'none',
-                                                    animation: 'none',
-                                                    transform: 'none',
-                                                    '&:hover': {
-                                                        backgroundColor: isSelected 
-                                                            ? 'rgba(255, 152, 0, 0.25)' 
-                                                            : 'rgba(255, 152, 0, 0.08)',
-                                                        transition: 'none',
-                                                    },
-                                                    '&:active': {
-                                                        backgroundColor: isSelected 
-                                                            ? 'rgba(255, 152, 0, 0.35)' 
-                                                            : 'rgba(255, 152, 0, 0.15)',
-                                                        transform: 'scale(0.98)',
-                                                    },
-                                                    py: 1.5,
-                                                    // 禁用 Material-UI ListItemButton 的所有內建效果
-                                                    '&.MuiButtonBase-root': {
-                                                        transition: 'none',
-                                                    }
-                                                }}
-                                                disableRipple={true}
-                                                disableTouchRipple={true}  
-                                            >
-                                                <ListItemIcon sx={{ minWidth: 40 }}>
-                                                    {isSelected ? (
-                                                        <CheckBoxIcon sx={{ color: '#ff9800' }} />
-                                                    ) : (
-                                                        <CheckBoxOutlineBlankIcon sx={{ color: '#999' }} />
-                                                    )}
-                                                </ListItemIcon>
-                                                <ListItemText 
-                                                    primary={
-                                                        <Box sx={{ 
-                                                            display: 'flex', 
-                                                            justifyContent: 'space-between',
-                                                            alignItems: 'center'
-                                                        }}>
-                                                            <Typography 
-                                                                variant="body1"
-                                                                sx={{ 
-                                                                    fontWeight: isSelected ? 'bold' : 'normal',
-                                                                    color: isSelected ? '#ff9800' : '#000000',
-                                                                    fontSize: { xs: '0.95rem', sm: '1rem' }
-                                                                }}
-                                                            >
-                                                                {group.groupIndex}. {group.displayName}
-                                                            </Typography>
-                                                            <Typography 
-                                                                variant="body2" 
-                                                                sx={{ 
-                                                                    color: '#666666',
-                                                                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
-                                                                }}
-                                                            >
-                                                                {group.wordCount} words
-                                                            </Typography>
-                                                        </Box>
-                                                    }
-                                                />
-                                            </ListItemButton>
-                                        </ListItem>
-                                        {index < wordGroups.length - 1 && (
-                                            <Divider variant="inset" component="li" />
-                                        )}
-                                    </React.Fragment>
-                                );
-                            })}
-                        </List>
+                        <WordGroupList
+                            groups={wordGroups}
+                            selectedGroups={config.selectedGroups}
+                            onToggle={handleGroupToggle}
+                        />
                     </CardContent>
                 </Card>
             )}
@@ -656,19 +548,18 @@ const TestSetup = () : JSX.Element => {
             </Card>
             
             {/* 開始測試按鈕 */}
-            <Button
+            <Button /*{getTotalSelectedWords() > 0 && `(${getTotalSelectedWords()} 個單字)`}*/
                 variant="contained"
                 size="large"
                 fullWidth
                 onClick={handleStartTest}
                 disabled={!config.level || config.selectedGroups.length === 0}
-                sx={{
-                    backgroundColor: '#ff9800',
-                    color: '#ffffff',
-                    transition: 'none',  // 完全移除 transition
+                sx={(theme) => ({
+                    backgroundColor: theme.palette.primary.light,
+                    color: theme.palette.primary.contrastText,
+                    transition: 'none',
                     '&:hover': {
-                        backgroundColor: '#e65100',
-                        color: '#ffffff'
+                        backgroundColor: theme.palette.primary.dark,
                     },
                     '&:active': {
                         backgroundColor: '#d84315',
@@ -685,16 +576,131 @@ const TestSetup = () : JSX.Element => {
                     '&.MuiButtonBase-root': {
                         transition: 'n  one',
                     }
-                }}
+                })}
                 disableRipple={true}
                 disableFocusRipple={true}
                 disableTouchRipple={true}
                 disableElevation={true}
             >
-                開始測試 {getTotalSelectedWords() > 0 && `(${getTotalSelectedWords()} 個單字)`}
+                開始測試 
             </Button>
         </Box>
     );
 };
+
+interface WordGroupListProps {
+    groups: WordGroup[];
+    selectedGroups: number[];
+    onToggle: (groupIndex: number) => void;
+}
+
+const WordGroupList = React.memo((props: WordGroupListProps): JSX.Element => {
+    const { groups, selectedGroups, onToggle } = props;
+
+    return (
+        <List 
+            sx={(theme) => ({ 
+                backgroundColor: 'white',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: '#000000',
+                maxHeight: 300,
+                overflow: 'auto',
+                '&::-webkit-scrollbar': {
+                    width: '4px',
+                },
+                '&::-webkit-scrollbar-track': {
+                    background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    background: theme.palette.primary.main,
+                    borderRadius: '2px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                    background: theme.palette.primary.dark,
+                },
+            })}
+        >
+            {groups.map((group, index) => {
+                const isSelected = selectedGroups.includes(group.groupIndex);
+                return (
+                    <React.Fragment key={group.groupIndex}>
+                        <ListItem disablePadding>
+                            <ListItemButton 
+                                onClick={() => onToggle(group.groupIndex)}
+                                sx={{
+                                    backgroundColor: isSelected ? 'rgba(255, 152, 0, 0.15)' : 'transparent',
+                                    transition: 'none',
+                                    animation: 'none',
+                                    transform: 'none',
+                                    '&:hover': {
+                                        backgroundColor: isSelected 
+                                            ? 'rgba(255, 152, 0, 0.25)' 
+                                            : 'rgba(255, 152, 0, 0.08)',
+                                        transition: 'none',
+                                    },
+                                    '&:active': {
+                                        backgroundColor: isSelected 
+                                            ? 'rgba(255, 152, 0, 0.35)' 
+                                            : 'rgba(255, 152, 0, 0.15)',
+                                        transform: 'scale(0.98)',
+                                    },
+                                    py: 1.5,
+                                    '&.MuiButtonBase-root': {
+                                        transition: 'none',
+                                    }
+                                }}
+                                disableRipple
+                                disableTouchRipple
+                            >
+                                <ListItemIcon sx={{ minWidth: 40 }}>
+                                    {isSelected ? (
+                                        <CheckBoxIcon sx={{ color: '#ff9800' }} />
+                                    ) : (
+                                        <CheckBoxOutlineBlankIcon sx={{ color: '#999' }} />
+                                    )}
+                                </ListItemIcon>
+                                <ListItemText 
+                                    primary={
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
+                                        }}>
+                                            <Typography 
+                                                variant="body1"
+                                                sx={{ 
+                                                    fontWeight: isSelected ? 'bold' : 'normal',
+                                                    color: isSelected ? '#ff9800' : '#000000',
+                                                    fontSize: { xs: '0.95rem', sm: '1rem' }
+                                                }}
+                                            >
+                                                {group.groupIndex}. {group.displayName}
+                                            </Typography>
+                                            <Typography 
+                                                variant="body2" 
+                                                sx={{ 
+                                                    color: '#666666',
+                                                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                                                }}
+                                            >
+                                                {group.wordCount} words
+                                            </Typography>
+                                        </Box>
+                                    }
+                                />
+                            </ListItemButton>
+                        </ListItem>
+                        {index < groups.length - 1 && (
+                            <Divider variant="inset" component="li" sx={(theme) => ({ borderColor: theme.palette.share.divider })} />
+                        )}
+                    </React.Fragment>
+                );
+            })}
+        </List>
+    );
+});
+
+
 
 export default TestSetup;

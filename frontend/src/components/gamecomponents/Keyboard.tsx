@@ -10,41 +10,58 @@ type KeyboardProps = {
 };
 
 const Keyboard = ({ guessedLetters,currentVocabularty,isGameOver,addGuessedLetter }: KeyboardProps): JSX.Element => {
-    const alphabet = "abcdefghijklmnopqrstuvwxyz";
+    const row1 = 'qwertyuiop'.split('');
+    const row2 = 'asdfghjkl'.split('');
+    const row3 = 'zxcvbnm'.split('');
+
     const StyledKeyboard = styled(Button)<{ status?: string }>(({ theme, status }) => ({
-        margin: theme.spacing(0.5),
-        minWidth: 'clamp(32px, 8vw, 42px)',
-        minHeight: 'clamp(32px, 8vw, 42px)', 
         borderRadius: 6,
-        fontSize: 'clamp(1rem, 2.2vw, 1.3rem)',
-        border: '2px solid #ffffff',
-        backgroundColor: '#ff9800',
-        color: '#000000',
+        border: '2px solid',
+        borderColor: theme.palette.wordGuess.buttonBorder,
+        backgroundColor: theme.palette.primary.light,
+        color: theme.palette.primary.contrastText,
         '&:hover': {
-            backgroundColor: '#e65100',
-            color: '#212121',
+            backgroundColor: theme.palette.primary.dark,
         },
         ...(status === 'correct' && {
-            backgroundColor: theme.palette.success.light,
+            backgroundColor: theme.palette.success.main,
             color: theme.palette.success.contrastText,
         }),
         ...(status === 'wrong' && {
-            backgroundColor: theme.palette.error.light,
+            backgroundColor: theme.palette.error.main,
             color: theme.palette.error.contrastText,
         }),
         ...(status === 'inactive' && {
-            backgroundColor: '#424242',
-           
+            backgroundColor: theme.palette.wordGuess.inactiveKey,
         }),
         '&.Mui-disabled': {
-             color: '#242323ff',
-        },       
+             color: '#242323',
+        },    
+        [theme.breakpoints.down('sm')]: {
+            margin: theme.spacing(0.3),
+            minWidth: 30,
+            minHeight: 46,
+            fontSize: '1rem',
+        },
+        [theme.breakpoints.up('sm')]: {
+            margin: theme.spacing(0.5),
+            minWidth: 36,
+            minHeight: 52,
+            fontSize: '1.1rem',
+        },
+        [theme.breakpoints.up('md')]: {
+    
+            minWidth: 42,
+            minHeight: 58,
+            fontSize: '1.2rem',
+        },          
+        
     }));
 
-    const KeyboardElements: JSX.Element[] = alphabet.split('').map((letter) => {
-        const isGuessed: boolean = guessedLetters.includes(letter)
-        const isCorrect: boolean = isGuessed && currentVocabularty.includes(letter)
-
+    const renderRow = (row: string[]) =>
+        row.map((letter) => {
+        const isGuessed = guessedLetters.includes(letter);
+        const isCorrect = isGuessed && currentVocabularty.includes(letter);
 
         return (
             <StyledKeyboard
@@ -62,24 +79,32 @@ const Keyboard = ({ guessedLetters,currentVocabularty,isGameOver,addGuessedLette
                 onClick={() => addGuessedLetter(letter)}
             >
             {letter.toUpperCase()}
-        </StyledKeyboard>
-
+            </StyledKeyboard>
         );
-    });
-    return(
-        <Box sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: 0.5,
-            width: '100%',
-            maxWidth: '600px',
-            padding: 1,
-            overflowX: 'auto',
-        }}>
-            {KeyboardElements}
-        </Box>
+        });
 
+    return (
+        <Box
+        sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: { xs: 0.25, sm: 0.5 },   // 手機行距更小
+            width: '100%',
+            maxWidth: 480,
+            p: { sm: 1 },
+        }}
+        >
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            {renderRow(row1)}
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            {renderRow(row2)}
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            {renderRow(row3)}
+        </Box>
+        </Box>
     );
 };
 

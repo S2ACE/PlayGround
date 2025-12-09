@@ -8,6 +8,7 @@ import WordCard from './WordCard';
 import type { JSX } from 'react';
 import { favouriteService } from '../../services/FavouriteService';
 import { useAuth } from '../../contexts/AuthContext';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 const WordLearning = (): JSX.Element => {
     const { level, range } = useParams<{ level: string; range: string }>();
@@ -158,11 +159,7 @@ const WordLearning = (): JSX.Element => {
     };
 
     if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <Typography variant="h6">Loading words...</Typography>
-            </Box>
-        );
+        return <LoadingSpinner message="Loading word" />;
     }
 
     if (words.length === 0) {
@@ -208,26 +205,44 @@ const WordLearning = (): JSX.Element => {
                     }}>
                         <IconButton 
                             onClick={handleHome}
-                            sx={{
-                                color: '#ff9800',
+                            sx={(theme) => ({
+                                color: theme.palette.primary.main,
+                                borderColor: theme.palette.primary.main,
+                                border: 2,
+                                borderRadius: 5, 
+                                width: { xs: 32, sm: 40 },
+                                height: { xs: 32, sm: 40 },
+                                '& .MuiSvgIcon-root': {
+                                fontSize: { xs: 18, sm: 24 },
+                                },                                
                                 '&:hover': {
-                                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                    backgroundColor: theme.palette.button.hover,
                                 }
-                            }}
+                            })}
                         >
                             <HomeIcon />
                         </IconButton>
                         <Button
                             onClick={handleGoBack}
                             startIcon={<KeyboardArrowLeft />}
-                            sx={{
-                                color: '#ff9800',
+                            sx={(theme) => ({
+                                color: theme.palette.primary.main,
+                                borderColor: theme.palette.primary.main,
+                                border: 2,
+                                borderRadius: 2,
                                 textTransform: 'none',
-                                minWidth: 'auto',
+                                padding: {
+                                    xs: '2px 8px', 
+                                    sm: '4px 12px',
+                                },
+                                minWidth: { xs: 64, sm: 'auto' },
+                                '& .MuiSvgIcon-root': {
+                                fontSize: { xs: 18, sm: 24 },
+                                },
                                 '&:hover': {
-                                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                    backgroundColor: theme.palette.button.hover,
                                 }
-                            }}
+                            })}
                             aria-label="go back"
                         >
                             Back

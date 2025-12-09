@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { vocabularyService, type Vocabulary } from '../../services/VocabularyService';
 import type { JSX } from 'react';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 interface WordGroup {
     startIndex: number;
@@ -113,11 +114,7 @@ const LetterSelection = (): JSX.Element => {
     };
 
     if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <Typography variant="h6">Loading words...</Typography>
-            </Box>
-        );
+        return <LoadingSpinner message="Loading word group" />;
     }
 
     return (
@@ -133,17 +130,27 @@ const LetterSelection = (): JSX.Element => {
                 <Button
                     onClick={handleGoBack}
                     startIcon={<KeyboardArrowLeft />}
-                    sx={{
-                        color: '#ff9800',
+                    sx={(theme) => ({
+                        color: theme.palette.primary.main,
+                        borderColor: theme.palette.primary.main,
+                        border: 2,
+                        borderRadius: 2,
                         textTransform: 'none',
                         position: { sm: 'absolute' },
-                        left: { xs: 0, sm: 0 },
-                        mb: { xs: 1, sm: 0 },
-                        minWidth: 'auto',
+                        left: 0,
+                        mb: 1,
+                        padding: {
+                            xs: '2px 8px', 
+                            sm: '4px 12px',
+                        },
+                        minWidth: { xs: 64, sm: 'auto' },
+                        '& .MuiSvgIcon-root': {
+                        fontSize: { xs: 18, sm: 24 },
+                        },
                         '&:hover': {
-                            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                            backgroundColor: theme.palette.button.hover 
                         }
-                    }}
+                    })}
                     aria-label="go back"
                 >
                     Back
@@ -166,18 +173,18 @@ const LetterSelection = (): JSX.Element => {
                 {wordGroups.map((group, index) => (
                     <Grid size={{ xs: 6, sm: 4, md: 3 }} key={`group-${index}`}>
                         <Card
-                            sx={{
+                            sx={(theme) => ({
                                 cursor: 'pointer',
                                 transition: 'transform 0.2s',
                                 '&:hover': {
                                     transform: 'translateY(-2px)',
-                                    backgroundColor: '#e65100',
+                                    backgroundColor: theme.palette.primary.dark,
                                 },
-                                backgroundColor: '#ff9800',
+                                backgroundColor: theme.palette.primary.light,
                                 minHeight: 120,
                                 display: 'flex',
                                 flexDirection: 'column',
-                            }}
+                            })}
                             onClick={() => handleGroupSelect(group)}
                         >
                             <CardContent sx={{ 

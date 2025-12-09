@@ -1,4 +1,3 @@
-// pages/Settings.tsx - 完整版 (Responsive + 舊版樣式 + Box 黑色框層)
 import { useState, type JSX } from 'react';
 import {
     Box, Paper, Typography, TextField, Button,
@@ -10,6 +9,7 @@ import { Google, Edit, Save, Cancel, Lock, LockOpen } from '@mui/icons-material'
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/AuthService';
 import LoadingSpinner from '../common/LoadingSpinner';
+import AvatarEditor from 'react-avatar-editor';
 
 const Settings = (): JSX.Element | null => {
     const { user, loading: authLoading, refreshUser } = useAuth();
@@ -22,24 +22,28 @@ const Settings = (): JSX.Element | null => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [avatarUploading, setAvatarUploading] = useState(false);
 
     const hasGoogleProvider = user?.providerData.some(p => p.providerId === 'google.com');
     const hasPasswordProvider = user?.providerData.some(p => p.providerId === 'password');
     const googleEmail = user?.providerData.find(p => p.providerId === 'google.com')?.email;
+    //avater
+    const [showCropDialog, setShowCropDialog] = useState(false);
+    const [rawImage, setRawImage] = useState<File | null>(null);
+    const [editorScale, setEditorScale] = useState(2);
+    const [editor, setEditor] = useState<AvatarEditor | null>(null);
 
     const textFieldSx = {
         '& .MuiInputLabel-root': {
-            backgroundColor: '#2a2a2a',
             paddingX: 1,
-            color: '#ccc'
+            color: 'text.primary'
         },
         '& .MuiInputLabel-shrink': {
-            backgroundColor: '#2a2a2a',
             paddingX: 1,
-            color: '#fff'
+            color: 'primary.light'
         },
         '& .MuiOutlinedInput-root': {
-            color: '#fff',
+            color: 'text.primary',
             '& fieldset': {
                 borderColor: '#555',
             },
@@ -47,8 +51,11 @@ const Settings = (): JSX.Element | null => {
                 borderColor: '#888',
             },
             '&.Mui-focused fieldset': {
-                borderColor: '#ff9800',
+                borderColor: 'primary.light',
             },
+            '& .MuiInputBase-input': {
+            fontSize: { xs: '1rem', sm: '1.3rem' },
+            },            
         },
     };
 
@@ -111,6 +118,72 @@ const Settings = (): JSX.Element | null => {
         }
     };
 
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setSuccess('');
+        setError('');
+
+        // 檔案型別限制
+        if (!file.type.startsWith('image/')) {
+            setError('請上傳圖片檔案');
+            e.target.value = '';
+            return;
+        }
+
+        // 檔案大小限制
+        if (file.size > 5 * 1024 * 1024) {
+            setError('圖片大小請小於 5MB');
+            e.target.value = '';
+            return;
+        }
+
+        setRawImage(file);
+        setEditorScale(2);
+        setShowCropDialog(true);
+
+        // 允許再次選同一檔
+        e.target.value = '';
+    };
+
+
+    const handleConfirmCrop = async () => {
+        if (!editor) return;
+
+        setSuccess('');
+        setError('');
+
+        try {
+            setAvatarUploading(true);
+            setError('');
+            setSuccess('');
+
+            const canvas = editor.getImageScaledToCanvas();
+
+            const blob: Blob | null = await new Promise((resolve) =>
+                canvas.toBlob((b) => resolve(b), 'image/png')
+            );
+
+            if (!blob) {
+                throw new Error('產生頭像失敗，請稍後再試');
+            }
+
+            const file = new File([blob], 'avatar.png', { type: 'image/png' });
+
+            await authService.updateAvatar(file);
+            await refreshUser();
+            setSuccess('✓ 頭像已更新');
+            setShowCropDialog(false);
+            setRawImage(null);
+        } catch (err: any) {
+            setError(err.message || '更新頭像失敗，請稍後再試');
+        } finally {
+            setAvatarUploading(false);
+        }
+    };
+
+
     if (authLoading) {
         return <LoadingSpinner />;
     }
@@ -121,8 +194,6 @@ const Settings = (): JSX.Element | null => {
 
     return (
         <Box sx={{
-            minHeight: '100vh',
-            bgcolor: '#1a1a1a',
             p: { xs: 2, sm: 3, md: 4 }
         }}>
             <Box sx={{
@@ -135,7 +206,7 @@ const Settings = (): JSX.Element | null => {
                     variant="h4"
                     sx={{
                         mb: { xs: 2, sm: 3 },
-                        color: '#fff',
+                        color: 'text.primary',
                         fontWeight: 'bold',
                         fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
                     }}
@@ -170,17 +241,19 @@ const Settings = (): JSX.Element | null => {
                 )}
 
                 {/* 個人資料區塊 */}
-                <Paper sx={{
-                    bgcolor: '#2a2a2a',
+                <Paper sx={(theme) => ({
+                    bgcolor: 'background.paper',
                     p: { xs: 2, sm: 3 },
                     mb: { xs: 2, sm: 3 },
-                    border: '1px solid #444'
-                }}>
+                    border: '2px solid',
+                    borderRadius: 2,
+                    borderColor: theme.palette.wordGuess.buttonBorder, 
+                })}>
                     <Typography
                         variant="h6"
                         sx={{
                             mb: { xs: 2, sm: 3 },
-                            color: '#ff9800',
+                            color: 'primary.light',
                             fontSize: { xs: '1.1rem', sm: '1.25rem' }
                         }}
                     >
@@ -194,47 +267,67 @@ const Settings = (): JSX.Element | null => {
                         alignItems={{ xs: 'flex-start', sm: 'center' }}
                         sx={{ mb: { xs: 2, sm: 3 } }}
                     >
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                         <Avatar
-                            sx={{
-                                width: { xs: 50, sm: 60 },
-                                height: { xs: 50, sm: 60 },
-                                bgcolor: '#ff9800',
-                                fontSize: { xs: '1.2rem', sm: '1.5rem' }
-                            }}
+                            src={user.photoURL || undefined}
+                            sx={(theme) => ({
+                                width: { xs: 64, sm: 72 },
+                                height: { xs: 64, sm: 72 },
+                                bgcolor: theme.palette.primary.light,
+                                color: theme.palette.text.primary,
+                                fontSize: { xs: '1.4rem', sm: '1.7rem' },
+                            })}
                         >
                             {displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
                         </Avatar>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography
-                                sx={{
-                                    color: '#fff',
-                                    fontWeight: 'bold',
-                                    fontSize: { xs: '0.95rem', sm: '1rem' },
-                                    wordBreak: 'break-all'
-                                }}
+
+                        <Button
+                            component="label"
+                            variant="text"
+                            disabled={avatarUploading}
+                            sx={(theme) => ({
+                                color: 'primary.light',
+                                fontSize: { xs: '0.8rem', sm: '0.85rem' },
+                                '&:hover': { bgcolor: theme.palette.button.hover },
+                            })}
+                        >
+                            {avatarUploading ? '上傳中...' : '更換頭像'}
+                            <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                            sx={{
+                                color: 'text.primary',
+                                fontWeight: 'bold',
+                                fontSize: { xs: '0.95rem', sm: '1rem' },
+                                wordBreak: 'break-all',
+                            }}
                             >
-                                {user?.email}
-                            </Typography>
-                            <Chip
-                                label={user?.emailVerified ? '✓ Email 已驗證' : '⚠ Email 未驗證'}
-                                size="small"
-                                sx={{
-                                    mt: 1,
-                                    bgcolor: user?.emailVerified ? '#4caf50' : '#ff9800',
-                                    color: 'white',
-                                    fontSize: { xs: '0.75rem', sm: '0.8125rem' }
-                                }}
-                            />
-                        </Box>
+                            {user?.email}
+                        </Typography>
+                        <Chip
+                            label={user?.emailVerified ? '✓ Email 已驗證' : '⚠ Email 未驗證'}
+                            size="small"
+                            sx={{
+                                mt: 1,
+                                bgcolor: user?.emailVerified ? 'success.main' : 'primary.main',
+                                color: 'white',
+                                fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+                            }}
+                        />
+                    </Box>
                     </Stack>
 
-                    <Divider sx={{ my: { xs: 2, sm: 3 }, bgcolor: '#444' }} />
+
+                    <Divider sx={(theme) => ({ my: { xs: 2, sm: 3 }, borderColor: theme.palette.primary.light })} />
 
                     {/* 顯示名稱 */}
                     <Box>
                         <Typography
                             sx={{
-                                color: '#aaa',
+                                color: 'text.primary',
                                 mb: 1,
                                 fontSize: { xs: '0.875rem', sm: '1rem' }
                             }}
@@ -262,11 +355,11 @@ const Settings = (): JSX.Element | null => {
                                         disabled={loading}
                                         startIcon={<Save />}
                                         fullWidth
-                                        sx={{
-                                            bgcolor: '#ff9800',
-                                            '&:hover': { bgcolor: '#f57c00' },
+                                        sx={(theme) => ({
+                                            bgcolor: theme.palette.primary.light,
+                                            '&:hover': { bgcolor: theme.palette.primary.dark },
                                             fontSize: { xs: '0.875rem', sm: '0.9375rem' }
-                                        }}
+                                        })}
                                     >
                                         儲存
                                     </Button>
@@ -277,9 +370,10 @@ const Settings = (): JSX.Element | null => {
                                         startIcon={<Cancel />}
                                         fullWidth
                                         sx={{
+                                            backgroundColor: 'secondary.main',
                                             borderColor: '#555',
-                                            color: '#aaa',
-                                            '&:hover': { borderColor: '#888', bgcolor: 'rgba(255,255,255,0.05)' },
+                                            color: 'text.primary',
+                                            '&:hover': { borderColor: '#888', backgroundColor: 'secondary.dark' },
                                             fontSize: { xs: '0.875rem', sm: '0.9375rem' }
                                         }}
                                     >
@@ -296,7 +390,7 @@ const Settings = (): JSX.Element | null => {
                             >
                                 <Typography
                                     sx={{
-                                        color: '#fff',
+                                        color: 'text.primary',
                                         fontSize: { xs: '0.95rem', sm: '1rem' }
                                     }}
                                 >
@@ -306,11 +400,11 @@ const Settings = (): JSX.Element | null => {
                                     variant="text"
                                     onClick={() => setEditing(true)}
                                     startIcon={<Edit />}
-                                    sx={{
-                                        color: '#ff9800',
-                                        '&:hover': { bgcolor: 'rgba(255, 152, 0, 0.1)' },
+                                    sx={(theme) => ({
+                                        color: 'primary.light',
+                                        '&:hover': { bgcolor: theme.palette.button.hover },
                                         fontSize: { xs: '0.875rem', sm: '0.9375rem' }
-                                    }}
+                                    })}
                                 >
                                     編輯
                                 </Button>
@@ -320,32 +414,35 @@ const Settings = (): JSX.Element | null => {
                 </Paper>
 
                 {/* 登入方式區塊 */}
-                <Paper sx={{
-                    bgcolor: '#2a2a2a',
+                <Paper sx={(theme) => ({
+                    bgcolor: 'background.paper',
                     p: { xs: 2, sm: 3 },
-                    border: '1px solid #444'
-                }}>
+                    border: '2px solid',
+                    borderRadius: 2,
+                    borderColor: theme.palette.wordGuess.buttonBorder,
+                })}>
                     <Typography
                         variant="h6"
                         sx={{
                             mb: { xs: 2, sm: 3 },
-                            color: '#ff9800',
+                            color: 'primary.light',
                             fontSize: { xs: '1.1rem', sm: '1.25rem' }
                         }}
                     >
                         🔐 登入方式
                     </Typography>
 
-                    {/* ✅ Google 綁定 - 加上 Box 黑色框層 */}
+                    {/* Google 綁定 */}
                     {hasGoogleProvider && (
                         <Box
-                            sx={{
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
+                            sx={(theme) => ({
+                                bgcolor: theme.palette.paper.background,
+                                border: '1px solid',
+                                borderColor: 'primary.main',
                                 borderRadius: 1,
                                 p: { xs: 1.5, sm: 2 },
                                 mb: { xs: 2, sm: 3 }
-                            }}
+                            })}
                         >
                             <Stack
                                 direction={{ xs: 'column', sm: 'row' }}
@@ -363,7 +460,7 @@ const Settings = (): JSX.Element | null => {
                                 />
                                 <Typography
                                     sx={{
-                                        color: '#aaa',
+                                        color: 'text.primary',
                                         fontSize: { xs: '0.875rem', sm: '1rem' },
                                         wordBreak: 'break-all',
                                         flex: 1
@@ -375,7 +472,7 @@ const Settings = (): JSX.Element | null => {
                                     label="已連結"
                                     size="small"
                                     sx={{
-                                        bgcolor: '#4caf50',
+                                        bgcolor: 'success.main',
                                         color: 'white',
                                         fontSize: { xs: '0.75rem', sm: '0.8125rem' }
                                     }}
@@ -386,12 +483,13 @@ const Settings = (): JSX.Element | null => {
 
                     {/* ✅ 密碼設定 - 加上 Box 黑色框層 */}
                     <Box
-                        sx={{
-                            bgcolor: '#1a1a1a',
-                            border: '1px solid #333',
+                        sx={(theme) => ({
+                            bgcolor: theme.palette.paper.background,
+                            border: '1px solid',
+                            borderColor: 'primary.main',
                             borderRadius: 1,
                             p: { xs: 1.5, sm: 2 }
-                        }}
+                        })}
                     >
                         <Stack
                             direction={{ xs: 'column', sm: 'row' }}
@@ -409,7 +507,7 @@ const Settings = (): JSX.Element | null => {
                             />
                             <Typography
                                 sx={{
-                                    color: '#aaa',
+                                    color: 'text.primary',
                                     flex: 1,
                                     fontSize: { xs: '0.875rem', sm: '1rem' }
                                 }}
@@ -423,11 +521,11 @@ const Settings = (): JSX.Element | null => {
                                     setPasswordError('');
                                 }}
                                 sx={{
-                                    borderColor: '#ff9800',
-                                    color: '#ff9800',
+                                    backgroundColor: 'primary.light',
+
+                                    color: 'primary.contrastText',
                                     '&:hover': {
-                                        borderColor: '#f57c00',
-                                        bgcolor: 'rgba(255, 152, 0, 0.1)'
+                                        backgroundColor: 'primary.dark',
                                     },
                                     fontSize: { xs: '0.875rem', sm: '0.9375rem' },
                                     minWidth: { sm: 120 },
@@ -455,18 +553,18 @@ const Settings = (): JSX.Element | null => {
                     fullWidth
                     slotProps={{
                         paper: {
-                            sx: {
-                                bgcolor: '#2a2a2a',
+                            sx:(theme) => ({
+                                backgroundColor: theme.palette.background.default,
                                 border: '1px solid #444',
                                 boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
                                 m: { xs: 2, sm: 3 }
                             }
-                        }
+                        )}
                     }}
                 >
                     <DialogTitle
                         sx={{
-                            color: '#fff',
+                            color: 'text.primary',
                             fontSize: { xs: '1.25rem', sm: '1.5rem' }
                         }}
                     >
@@ -490,7 +588,7 @@ const Settings = (): JSX.Element | null => {
                                 sx={textFieldSx}
                                 slotProps={{
                                     formHelperText: {
-                                        sx: { color: '#888', fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                                        sx: { color: 'text.primary', fontSize: { xs: '0.75rem', sm: '0.875rem' } }
                                     }
                                 }}
                             />
@@ -514,8 +612,9 @@ const Settings = (): JSX.Element | null => {
                             }}
                             disabled={loading}
                             sx={{
-                                color: '#aaa',
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                                backgroundColor: 'secondary.main',
+                                color: 'text.primary',
+                                '&:hover': { backgroundColor: 'secondary.dark' },
                                 fontSize: { xs: '0.875rem', sm: '0.9375rem' }
                             }}
                         >
@@ -526,8 +625,8 @@ const Settings = (): JSX.Element | null => {
                             variant="contained"
                             disabled={loading}
                             sx={{
-                                bgcolor: '#ff9800',
-                                '&:hover': { bgcolor: '#f57c00' },
+                                backgroundColor: 'primary.light',
+                                '&:hover': { backgroundColor: 'primary.dark' },
                                 fontSize: { xs: '0.875rem', sm: '0.9375rem' }
                             }}
                         >
@@ -535,6 +634,133 @@ const Settings = (): JSX.Element | null => {
                         </Button>
                     </DialogActions>
                 </Dialog>
+
+                <Dialog
+                    open={showCropDialog}
+                    onClose={(_, reason) => {
+                        if (reason === 'backdropClick') return;
+                        if (!avatarUploading) {
+                            setShowCropDialog(false);
+                            setRawImage(null);
+                        }
+                    }}
+                    fullWidth
+                    maxWidth="sm"
+                    slotProps={{
+                        paper: {
+                            sx: {
+                                m: { xs: 1.5, sm: 3 },
+                                width: '100%',
+                                maxWidth: { xs: '100%', sm: 600 },
+                            },
+                        },
+                    }}
+                >
+                    <DialogTitle
+                        sx={{
+                            fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                        }}
+                    >
+                        調整頭像位置
+                    </DialogTitle>
+
+                    <DialogContent
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 2,
+                            minHeight: { xs: 260, sm: 320 },
+                            pt: { xs: 1, sm: 2 },
+                        }}
+                    >
+                        {/* 裁剪區：touchAction 只包住 AvatarEditor，手機可拖動 */}
+                        <Box 
+                            sx={{ touchAction: 'none' }}
+                            onTouchMove={(e) => e.preventDefault()}
+                        >
+                            {rawImage && (
+                                <AvatarEditor
+                                    ref={(ref: AvatarEditor | null) => setEditor(ref)}
+                                    image={rawImage}
+                                    width={120}
+                                    height={120}
+                                    border={80}
+                                    borderRadius={120}
+                                    color={[0, 0, 0, 0.6]}
+                                    scale={editorScale}
+                                    rotate={0}
+                                />
+                            )}
+                        </Box>
+
+                        {/* 縮放控制條 */}
+                        <Box sx={{ width: '100%', px: { xs: 1, sm: 3 } }}>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: 'text.primary',
+                                    mb: 1,
+                                    fontSize: { xs: '0.8rem', sm: '1.0rem' },
+                                }}
+                            >
+                                縮放
+                            </Typography>
+                            <input
+                                type="range"
+                                min={1}
+                                max={3}
+                                step={0.01}
+                                value={editorScale}
+                                onChange={(e) => setEditorScale(Number(e.target.value))}
+                                style={{ width: '100%' }}
+                            />
+                        </Box>
+                    </DialogContent>
+
+                    <DialogActions
+                        sx={{
+                            px: { xs: 2, sm: 3 },
+                            pb: { xs: 2, sm: 3 },
+                            gap: 1,
+                        }}
+                    >
+                        <Button
+                            onClick={() => {
+                                if (avatarUploading) return;
+                                setShowCropDialog(false);
+                                setRawImage(null);
+                            }}
+                            disabled={avatarUploading}
+                            sx={(theme) => ({ 
+                                fontSize: { xs: '0.875rem', sm: '1.0rem', 
+                                '&:hover': {
+                                    backgroundColor: theme.palette.button.hover,
+                                }} 
+                            })}
+                        >
+                            取消
+                        </Button>
+                        <Button
+                            onClick={handleConfirmCrop}
+                            disabled={avatarUploading}
+                            variant="contained"
+                            sx={{ 
+                                fontSize: { xs: '0.875rem', sm: '1.0rem' },
+                                backgroundColor: 'primary.light',
+                                '&:hover': {
+                                    backgroundColor: 'primary.dark',
+                                }
+                            }}
+                        >
+                            {avatarUploading ? <CircularProgress size={20} /> : '使用這個範圍'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+
+
+
             </Box>
         </Box>
     );

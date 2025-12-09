@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode, type JSX } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode, type JSX } from 'react';
 import { vocabularyService, type Vocabulary } from '../services/VocabularyService';
 import { getRandomWord } from '../utils';
 
@@ -60,12 +60,12 @@ export const VocabularyProvider = ({ children }: VocabularyProviderProps): JSX.E
         };
     }, []);
 
-    const getNewWord = () => {
+    const getNewWord = useCallback(() => {
         if (vocabList.length > 0) {
-            return getRandomWord(vocabList);
+        return getRandomWord(vocabList);
         }
         return '';
-    };
+    }, [vocabList]);
 
     const value = {
         vocabList,

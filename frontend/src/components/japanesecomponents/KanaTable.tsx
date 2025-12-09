@@ -1,63 +1,89 @@
 import { Grid, Box } from '@mui/material';
-import { useState } from 'react';
+import { useState, useMemo, useCallback, type JSX } from 'react';
 import { kanaRows, voicedKanaRows, youonKanaRows } from '../../data/kanaData';
-import type { JSX } from 'react';
 import Header from './Header';
 import KanaDialog from './KanaDialog';
 import KanaToggle from './KanaToggle';
 import KanaGridCell from './KanaGridCell';
-import KanaNavigation from './KanaNavigation';
 import { useParams } from 'react-router-dom';
 import type { Kana } from '../../data/kanaData';
 
-const DIALOG_WIDTH = 400;
-const ARROW_OFFSET = 30;
-
 const KanaTable = (): JSX.Element => {
   const { type } = useParams();
-  let kanaData: Kana[][];
-  let gridColumns = 5;
-  let isInteractive = true;
+  let rawKanaData: Kana[][];
+  let initialGridColumns = 5;
+  let initialInteractive = true;
 
   switch (type) {
     case 'seion':
-      kanaData = kanaRows;
-      gridColumns = 5;
-      isInteractive = true;
+      rawKanaData = kanaRows;
+      initialGridColumns = 5;
+      initialInteractive = true;
       break;
     case 'dakuon&handakuon':
-      kanaData = voicedKanaRows;
-      gridColumns = 5;
-      isInteractive = true;
+      rawKanaData = voicedKanaRows;
+      initialGridColumns = 5;
+      initialInteractive = true;
       break;
     case 'youon':
-      kanaData = youonKanaRows
-      gridColumns = 3;
-      isInteractive = false;
+      rawKanaData = youonKanaRows;
+      initialGridColumns = 3;
+      initialInteractive = false;
       break;
     default:
-      kanaData = kanaRows;
-      gridColumns = 5;
+      rawKanaData = kanaRows;
+      initialGridColumns = 5;
+      initialInteractive = true;
   }
 
-  
   const [kanaType, setKanaType] = useState<'hiragana' | 'katakana'>('hiragana');
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(0);
   const [selectedCol, setSelectedCol] = useState(0);
 
-  const handleClick = (rowIdx: number, colIdx: number) => {
-    if (!isInteractive){
-      return;
-    }
-    const char = kanaData[rowIdx][colIdx][kanaType];
-    if (!char){
-      return;
-    }
-    setSelectedRow(rowIdx);
-    setSelectedCol(colIdx);
-    setOpen(true);
-  };
+  const gridColumns = initialGridColumns;
+  const isInteractive = initialInteractive;
+  const kanaData = rawKanaData;
+
+  // 用 useCallback 確保 reference 穩定
+  const handleClick = useCallback(
+    (rowIdx: number, colIdx: number) => {
+      if (!isInteractive) return;
+      const char = kanaData[rowIdx][colIdx][kanaType];
+      if (!char) return;
+      setSelectedRow(rowIdx);
+      setSelectedCol(colIdx);
+      setOpen(true);
+    },
+    [isInteractive, kanaData, kanaType]
+  );
+
+  // 表格 JSX 做 memo，只在依賴變時重建
+  const kanaGrid = useMemo(
+    () => (
+      <Box sx={{ mt: 0 }}>
+        {kanaData.map((row, rowIndex) => (
+          <Grid container columns={gridColumns} key={rowIndex}>
+            {row.map((kana, colIndex) => {
+              const char = kana[kanaType];
+              const romaji = kana.romaji;
+              return (
+                <KanaGridCell
+                  key={colIndex}
+                  char={char}
+                  romaji={romaji}
+                  onClick={() => handleClick(rowIndex, colIndex)}
+                  gridColumns={gridColumns}
+                  isInteractive={isInteractive}
+                />
+              );
+            })}
+          </Grid>
+        ))}
+      </Box>
+    ),
+    [kanaData, gridColumns, kanaType, isInteractive, handleClick]
+  );
 
   const handlePrev = () => {
     let row = selectedRow;
@@ -93,9 +119,17 @@ const KanaTable = (): JSX.Element => {
     }
   };
 
-  const allKanaPositions = kanaData.flatMap((row, rowIdx) =>
-    row.map((kana, colIdx) => (kana[kanaType] ? [rowIdx, colIdx] : null)).filter(Boolean)
-  ) as [number, number][];
+  const allKanaPositions = useMemo(
+    () =>
+      kanaData
+        .flatMap((row, rowIdx) =>
+          row
+            .map((kana, colIdx) => (kana[kanaType] ? [rowIdx, colIdx] : null))
+            .filter(Boolean)
+        ) as [number, number][],
+    [kanaData, kanaType]
+  );
+
   const currentIndex = allKanaPositions.findIndex(
     ([row, col]) => row === selectedRow && col === selectedCol
   );
@@ -109,54 +143,23 @@ const KanaTable = (): JSX.Element => {
     <>
       <Box sx={{ maxWidth: 480, mx: 'auto', width: '100%', mt: 4 }}>
         <Header title={type} />
-        {/* 平假名,片假名 Toggle */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
           <KanaToggle kanaType={kanaType} setKanaType={setKanaType} />
         </Box>
 
-        {/* 50音表 */}
-        <Box sx={{ mt: 0 }}>
-          {kanaData.map((row, rowIndex) => (
-            <Grid container columns={gridColumns} key={rowIndex}>
-              {row.map((kana, colIndex) => {
-                const char = kana[kanaType];
-                const romaji = kana.romaji;
-                return (
-                  <KanaGridCell
-                    key={colIndex}
-                    char={char}
-                    romaji={romaji}
-                    onClick={() => handleClick(rowIndex, colIndex)}
-                    gridColumns={gridColumns}
-                    isInteractive={isInteractive}
-                  />
-                );
-              })}
-            </Grid>
-          ))}
-        </Box>
+        {kanaGrid}
       </Box>
 
-          
       <KanaDialog
         open={open}
         kana={selectedKana}
         romaji={selectedKanaRomaji}
         onClose={() => setOpen(false)}
+        isFirst={isFirst}
+        isLast={isLast}
+        onPrev={handlePrev}
+        onNext={handleNext}
       />
-
-      {open && (
-        <KanaNavigation
-          isFirst={isFirst}
-          isLast={isLast}
-          onPrev={handlePrev}
-          onNext={handleNext}
-          dialogWidth={DIALOG_WIDTH}
-          offset={ARROW_OFFSET}
-        />
-      )}
-
-
     </>
   );
 };

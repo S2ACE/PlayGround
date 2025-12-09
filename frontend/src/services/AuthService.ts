@@ -14,6 +14,18 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import { API_ENDPOINTS } from '../config/api';
+import { SupabaseClient } from '../lib/SupabaseClient';
+
+export interface MemberDto {
+    id: string;
+    email: string;
+    displayName?: string;
+    photoURL?: string;
+    emailVerified: boolean;
+    role: string;
+    preferredLanguage: string;
+    darkMode: boolean;
+}
 
 export class AuthService {
     private googleProvider = new GoogleAuthProvider();
@@ -23,6 +35,31 @@ export class AuthService {
         this.googleProvider.addScope('email');
     }
     
+
+    async getMember(): Promise<MemberDto | null> {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return null;
+
+        try {
+            const idToken = await currentUser.getIdToken();
+            const res = await fetch(`${API_ENDPOINTS.MEMBERS}/${currentUser.uid}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${idToken}`,
+                },
+        });
+
+        if (!res.ok) return null;
+
+        const member = (await res.json()) as MemberDto;
+        return member;
+        } catch (e) {
+            console.error('讀取會員資料失敗', e);
+            return null;
+        }
+    }
+
     // ==================== 註冊和登入 ====================
     
     // Email 註冊
@@ -123,7 +160,7 @@ export class AuthService {
     /**
      * 更新會員資料（使用後端 API）
      */
-    async updateMember(displayName?: string, photoURL?: string): Promise<void> {
+    async updateMember(displayName?: string, photoURL?: string, darkMode?: boolean): Promise<void> {
         const currentUser = auth.currentUser;
         if (!currentUser) {
             throw new Error('用戶未登入');
@@ -131,7 +168,7 @@ export class AuthService {
 
         try {
             // 1. 更新 Firebase Auth Profile
-            const updates: { displayName?: string; photoURL?: string } = {};
+            const updates: { displayName?: string; photoURL?: string; darkMode?: boolean } = {};
             if (displayName !== undefined) updates.displayName = displayName;
             if (photoURL !== undefined) updates.photoURL = photoURL;
             
@@ -151,7 +188,8 @@ export class AuthService {
                 },
                 body: JSON.stringify({
                     displayName: displayName,
-                    photoURL: photoURL
+                    photoURL: photoURL,
+                    darkMode: darkMode
                 })
             });
 
@@ -173,7 +211,39 @@ export class AuthService {
      * 更新顯示名稱
      */
     async updateDisplayName(displayName: string): Promise<void> {
-        await this.updateMember(displayName, undefined);
+        await this.updateMember(displayName, undefined, undefined);
+    }
+
+    async updateDarkMode(darkMode: boolean): Promise<void> {
+        await this.updateMember(undefined, undefined, darkMode);
+    }
+
+    async updateAvatar(file: File): Promise<void> {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            throw new Error('用戶未登入');
+        }
+
+        // 1. 上傳到 Supabase Storage
+        const filePath = `${currentUser.uid}`;
+        const { data, error: uploadError } = await SupabaseClient.storage
+            .from('avatars')
+            .upload(filePath, file, { upsert: true });
+
+        console.log('upload result', { data, uploadError });
+
+        if (uploadError) {
+            console.error('上傳頭像失敗:', uploadError);
+            throw uploadError;
+        }
+
+        const {
+            data: { publicUrl },
+        } = SupabaseClient.storage.from('avatars').getPublicUrl(filePath);
+
+        const cacheBustedUrl = `${publicUrl}?v=${Date.now()}`;
+
+        await this.updateMember(undefined, cacheBustedUrl, undefined);
     }
 
     /**

@@ -1,9 +1,14 @@
 import type { JSX } from 'react';
 import { speakKana } from '../../utils';
-import { IconButton } from '@mui/material';
+import { IconButton, type SxProps, type Theme } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
-const KanaSpeak = ( {char} : { char: string } ): JSX.Element => {
+type KanaSpeakProps = {
+    char: string;
+    sx?: SxProps<Theme>;
+};
+
+const KanaSpeak = ({ char, sx }: KanaSpeakProps): JSX.Element => {
     return (
         <>
             <IconButton
@@ -14,7 +19,7 @@ const KanaSpeak = ( {char} : { char: string } ): JSX.Element => {
                 size="small"
                 tabIndex={-1}
                 aria-label="play sound"
-                sx={{ ml: 1 }}
+                sx={{ ml: 1, color: '#8a580dff', ...sx }}
             >
                 <VolumeUpIcon fontSize="inherit" />
             </IconButton>        

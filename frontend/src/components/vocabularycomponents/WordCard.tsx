@@ -4,8 +4,11 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useState } from 'react';
 import type { Vocabulary } from '../../services/VocabularyService';
 import type { JSX } from 'react';
-import filledHeartImg from "../../assets/filled_heart.png";
-import emptyHeartImg from "../../assets/empty_heart.png";
+import filledHeartImgLight from "../../assets/filled_heart_light.png";
+import emptyHeartImgLight from "../../assets/empty_heart_light.png";
+import filledHeartImgDark from "../../assets/filled_heart_dark.png";
+import emptyHeartImgDark from "../../assets/empty_heart_dark.png";
+import { useTheme } from '@mui/material/styles';
 
 type WordCardProps = {
     word: Vocabulary;
@@ -35,6 +38,7 @@ const WordCard = ({
     isFlipped: propIsFlipped,
     hideControls = false
 }: WordCardProps): JSX.Element => {
+    const theme = useTheme();
     const [internalIsFlipped, setInternalIsFlipped] = useState(false);
     
     // 使用外部 prop 或內部 state
@@ -55,6 +59,11 @@ const WordCard = ({
         
         speechSynthesis.speak(utterance);
     };
+
+	const filledHeartSrc =
+		theme.palette.mode === 'dark' ? filledHeartImgDark : filledHeartImgLight;
+	const emptyHeartSrc =
+		theme.palette.mode === 'dark' ? emptyHeartImgDark : emptyHeartImgLight;
 
     const getPartOfSpeechColor = (pos: string) => {
         const colors: Record<string, string> = {
@@ -108,19 +117,26 @@ const WordCard = ({
             }}>
                 <Typography
                     variant="h2"
-                    sx={{
+                    sx={(theme) => ({
                         fontWeight: 'bold',
-                        color: '#000000',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                        color: theme.palette.text.primary,
+                        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
                         fontSize: { xs: '2rem', sm: '3rem' },
-                    }}
+                    })}
                 >
                     {word.word}
                 </Typography>
             </Box>
 
             {/* 分隔線 */}
-            <Divider sx={{ width: '100%', flexShrink: 0, mt: 2, mb: 2 }} />
+            <Divider
+            sx={(theme) => ({
+                width: '100%',
+                flexShrink: 0,
+                my: { xs: 2, sm: 3 },
+                borderColor: theme.palette.share.divider,
+            })}
+            />
 
             {/* 解釋區域 */}
             <Box sx={{
@@ -140,7 +156,7 @@ const WordCard = ({
                         background: 'transparent',
                     },
                     '&::-webkit-scrollbar-thumb': {
-                        background: 'rgba(255, 152, 0, 0.2)',
+                        background: '#ff980033',
                         borderRadius: '2px',
                     },
                 }}>
@@ -155,10 +171,10 @@ const WordCard = ({
                             }}>
                                 <Typography
                                     variant="h6"
-                                    sx={{
-                                        color: '#000000',
+                                    sx={(theme) => ({
+                                        color: theme.palette.text.primary,
                                         fontWeight: 'bold',
-                                    }}
+                                    })}
                                 >
                                     解釋
                                 </Typography>
@@ -175,8 +191,8 @@ const WordCard = ({
                             </Box>
                             <Typography
                                 variant="body1"
-                                sx={{
-                                    color: '#000000',
+                                sx={(theme) => ({
+                                    color: theme.palette.text.primary,
                                     lineHeight: 1.3,
                                     fontWeight: 500,
                                     fontSize: { xs: '1rem', sm: '1.1rem' },
@@ -185,7 +201,7 @@ const WordCard = ({
                                         content: '"。 "',
                                         fontWeight: 'bold'
                                     }
-                                }}
+                                })}
                             >
                                 {word.chineseDefinition}
                             </Typography>
@@ -198,7 +214,7 @@ const WordCard = ({
                             <Typography
                                 variant="body1"
                                 sx={{
-                                    color: '#000000',
+                                    color: 'text.primary',
                                     lineHeight: 1.3,
                                     fontWeight: 500,
                                     fontStyle: 'normal',
@@ -226,26 +242,27 @@ const WordCard = ({
                 maxHeight: { xs: '120px', sm: '140px' }
             }}>
                 {word.example ? (
-                    <Box sx={{
+                    <Box sx={(theme) => ({
                         width: '100%',
                         height: '100%',
-                        backgroundColor: '#fff3e0',
-                        border: '1px solid #ff9800',
+                        backgroundColor: theme.palette.paper.background,
+                        border: '2px solid',
+                        borderColor: theme.palette.primary.main,
                         borderRadius: 2,
                         p: 2,
                         display: 'flex',
                         flexDirection: 'column',
                         boxSizing: 'border-box'
-                    }}>
+                    })}>
                         <Typography
                             variant="body1"
-                            sx={{
-                                color: '#000000',
+                            sx={(theme) => ({
+                                color: theme.palette.text.primary,
                                 fontWeight: 'bold',
                                 fontSize: { xs: '0.9rem', sm: '1rem' },
                                 textAlign: 'left',
                                 flexShrink: 0
-                            }}
+                            })}
                         >
                             例句
                         </Typography>
@@ -266,8 +283,8 @@ const WordCard = ({
                         }}>
                             <Typography
                                 variant="body1"
-                                sx={{
-                                    color: '#000000',
+                                sx={(theme) => ({
+                                    color: theme.palette.text.primary,
                                     lineHeight: 1.4,
                                     fontSize: { xs: '0.9rem', sm: '1rem' },
                                     textAlign: 'left',
@@ -275,7 +292,7 @@ const WordCard = ({
                                         content: '"。 "',
                                         fontWeight: 'bold',
                                     }
-                                }}
+                                })}
                             >
                                 {word.example}
                             </Typography>
@@ -294,10 +311,10 @@ const WordCard = ({
                     }}>
                         <Typography
                             variant="body2"
-                            sx={{
-                                color: '#999999',
+                            sx={(theme) => ({
+                                color: theme.palette.wordCard.fontColor,
                                 fontStyle: 'italic'
-                            }}
+                            })}
                         >
                             無例句
                         </Typography>
@@ -309,7 +326,7 @@ const WordCard = ({
 
     return (
         <Card
-            sx={{
+            sx={(theme) => ({
                 width: '100%',
                 height: { xs: '100%', sm: '630px' },
                 cursor: mode === 'test' ? 'pointer' : 'default',
@@ -320,10 +337,13 @@ const WordCard = ({
                 position: 'relative',
                 '&:hover': {
                     transform: { xs: 'none', sm: 'scale(1.02)' },
-                    boxShadow: '0 8px 25px rgba(255, 152, 0, 0.3)',
-                    borderColor: '#e65100',
+                boxShadow:
+                    theme.palette.mode === 'dark'
+                    ? '0 6px 18px rgba(0, 0, 0, 0.6)'
+                    : '0 8px 25px rgba(255, 152, 0, 0.3)',
+                    borderColor: theme.palette.primary.dark,
                 },
-            }}
+            })}
             onClick={handleCardClick}
         >
             {/* 右上角控制區域 - test 模式 flip 後也顯示 */}
@@ -424,12 +444,16 @@ const WordCard = ({
                                 transform: 'scale(1.1)',
                             },
                         }}
-                        title={isFavourite ? "Remove from favourites" : "Add to favourites"}
+                        title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
                     >
-                        <img
-                            src={isFavourite ? filledHeartImg : emptyHeartImg}
-                            alt={isFavourite ? "Remove from favourites" : "Add to favourites"}
-                            style={{ width: '26px', height: '23px' }}
+                        <Box
+                            component="img"
+                            src={isFavourite ? filledHeartSrc : emptyHeartSrc}
+                            alt={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+                            sx={{
+                                width: { xs: 29, sm: 35 },
+                                height: { xs: 26, sm: 32 },
+                            }}
                         />
                     </Box>
                 </Box>
@@ -442,22 +466,22 @@ const WordCard = ({
                         e.stopPropagation();
                         onPrevious?.();
                     }}
-                    sx={{
+                    sx={(theme) => ({
                         position: 'absolute',
-                        bottom: 16,
-                        left: 16,
-                        backgroundColor: 'white',
-                        boxShadow: 2,
-                        width: 48,
-                        height: 48,
-                        border: '2px solid #ff9800',
-                        color: '#ff9800',
+                        bottom: 1,
+                        left: 1,
+                        backgroundColor: 'primary.light',
+                        boxShadow: 3,
+                        width: { xs: 40, sm: 44 },
+                        height: { xs: 40, sm: 44 },
+                        border: '2px solid',
+                        borderColor: theme.palette.wordGuess.buttonBorder,
+                        color: theme.palette.primary.contrastText,
                         zIndex: 10,
                         '&:hover': {
-                            backgroundColor: '#fff3e0',
-                            transform: 'scale(1.1)',
+                            backgroundColor: theme.palette.primary.dark,
                         },
-                    }}
+                    })}
                 >
                     <ArrowBackIosIcon fontSize="small" />
                 </IconButton>
@@ -470,33 +494,34 @@ const WordCard = ({
                         e.stopPropagation();
                         onNext?.();
                     }}
-                    sx={{
+                    sx={(theme) => ({
                         position: 'absolute',
-                        bottom: 16,
-                        right: 16,
-                        backgroundColor: 'white',
-                        boxShadow: 2,
-                        width: 48,
-                        height: 48,
-                        border: '2px solid #ff9800',
-                        color: '#ff9800',
+                        bottom: 1,
+                        right: 1,
+                        backgroundColor: 'primary.light',
+                        boxShadow: 3,
+                        width: { xs: 40, sm: 48 },
+                        height: { xs: 40, sm: 48 },
+                        border: '2px solid',
+                        borderColor: theme.palette.wordGuess.buttonBorder,
+                        color: theme.palette.primary.contrastText,
                         zIndex: 10,
                         '&:hover': {
-                            backgroundColor: '#fff3e0',
-                            transform: 'scale(1.1)',
+                            backgroundColor: theme.palette.primary.dark,
                         },
-                    }}
+                    })}
                 >
                     <ArrowForwardIosIcon fontSize="small" />
                 </IconButton>
             )}
 
             <CardContent
-                sx={{
+                sx={(theme) => ({
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%',
                     overflowY: { xs: 'auto', sm: 'visible' },
+                    backgroundColor: 'background.paper',
                     p: { xs: 3, sm: 4 },
                     '&::-webkit-scrollbar': {
                         width: '4px',
@@ -505,13 +530,13 @@ const WordCard = ({
                         background: 'transparent',
                     },
                     '&::-webkit-scrollbar-thumb': {
-                        background: 'rgba(255, 152, 0, 0.3)',
+                        background: theme.palette.primary.main,
                         borderRadius: '2px',
                     },
                     '&::-webkit-scrollbar-thumb:hover': {
-                        background: 'rgba(255, 152, 0, 0.5)',
+                        background: theme.palette.primary.dark,
                     },
-                }}
+                })}
             >
                 {mode === 'study' ? (
                     <StudyContent />
@@ -530,12 +555,12 @@ const WordCard = ({
                             }}>
                                 <Typography
                                     variant="h2"
-                                    sx={{
+                                    sx={(theme) => ({
                                         fontWeight: 'bold',
-                                        color: '#000000',
+                                        color: theme.palette.text.primary,
                                         textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
                                         fontSize: { xs: '2rem', sm: '3rem' }
-                                    }}
+                                    })}
                                 >
                                     {word.word}
                                 </Typography>
@@ -554,7 +579,7 @@ const WordCard = ({
                                 <Typography
                                     variant="body2"
                                     sx={{
-                                        color: '#666666',
+                                        color: 'text.primary',
                                         fontStyle: 'italic'
                                     }}
                                 >

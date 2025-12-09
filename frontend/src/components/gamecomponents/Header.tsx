@@ -10,7 +10,6 @@ type HeaderProps = LifeBarProps & {
     confettiUrl?: string;
 }
 
-
 const Header = ({ maxLives, livesLeft, showConfetti, onToggleConfetti, confettiUrl }: HeaderProps): JSX.Element => {
     const statusString = livesLeft > 0 ? "💡 You still have " + (livesLeft) + " chances to get it wrong." : "🔥 Game Over!!";
     
@@ -67,8 +66,8 @@ const Header = ({ maxLives, livesLeft, showConfetti, onToggleConfetti, confettiU
             <Typography 
                 variant="body1" 
                 component="p" 
-                sx={{ fontSize: { xs: '1.0rem', sm: '1.2rem', md: '1.3rem' } 
-                }}
+                sx={(theme) => ({ fontSize: { xs: '1.0rem', sm: '1.2rem', md: '1.3rem', color : theme.palette.text.primary },
+                })}
             >
                 Lives: 5 + 1 per 3 letters. Think fast—can you guess the word?
             </Typography>
@@ -76,8 +75,9 @@ const Header = ({ maxLives, livesLeft, showConfetti, onToggleConfetti, confettiU
             <Typography
                 variant="body1"
                 component="p"
-                sx={{
+                sx={(theme) => ({
                     fontSize: { xs: '1.0rem', sm: '1.2rem', md: '1.3rem' } ,
+                    color : theme.palette.text.primary,
                     ...(livesLeft <= 0 && {
                     color: '#FF3D00',
                     fontWeight: 'bold',
@@ -102,7 +102,7 @@ const Header = ({ maxLives, livesLeft, showConfetti, onToggleConfetti, confettiU
                         },
                     },
                     }),
-                }}
+                })}
             >
             {statusString}
             </Typography>

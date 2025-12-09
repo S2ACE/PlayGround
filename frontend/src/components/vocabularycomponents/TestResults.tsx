@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import type { VocabularyProgress, ProficiencyLevel } from './TestSetup';
 import { vocabularyProgressService, getCurrentProficiency } from '../../services/VocabularyProgressService';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 const TestResults = (): JSX.Element => {
     const navigate = useNavigate();
@@ -78,23 +79,14 @@ const TestResults = (): JSX.Element => {
     const getProficiencyColor = (level: ProficiencyLevel): string => {
         switch (level) {
             case 'mastered': return '#4caf50';
-            case 'somewhat_familiar': return '#ff9800';
+            case 'somewhat_familiar': return '#ED6C02';
             case 'not_familiar': return '#f44336';
         }
     };
 
     // ✅ 載入中顯示
     if (isLoading) {
-        return (
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '400px'
-            }}>
-                <Typography>載入中...</Typography>
-            </Box>
-        );
+        return <LoadingSpinner message='Loading' />;
     }
 
     return (
@@ -119,10 +111,7 @@ const TestResults = (): JSX.Element => {
 
             <Card sx={{
                 mb: 3,
-                backgroundColor: '#ff9800',
-                '&:hover': {
-                    backgroundColor: '#e65100',
-                }
+                backgroundColor: 'primary.light',
             }}>
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                     <Typography 
@@ -130,7 +119,7 @@ const TestResults = (): JSX.Element => {
                         sx={{ 
                             mb: 3, 
                             textAlign: 'center',
-                            color: '#000000',
+                            color: 'primary.contrastText',
                             fontWeight: 'bold',
                             fontSize: { xs: '1.1rem', sm: '1.25rem' }
                         }}
@@ -222,8 +211,8 @@ const TestResults = (): JSX.Element => {
                     fullWidth
                     onClick={() => navigate('/test/setup')}
                     sx={{
-                        backgroundColor: '#ff9800',
-                        '&:hover': { backgroundColor: '#e65100' },
+                        backgroundColor: 'primary.light',
+                        '&:hover': { backgroundColor: 'primary.dark' },
                         py: { xs: 1.5, sm: 2 },
                         fontWeight: 'bold',
                         fontSize: { xs: '1rem', sm: '1.1rem' }
@@ -237,18 +226,18 @@ const TestResults = (): JSX.Element => {
                     size="large"
                     fullWidth
                     onClick={() => navigate('/vocabulary/level')}
-                    sx={{
-                        borderColor: '#ff9800',
-                        color: '#ff9800',
+                    sx={(theme) => ({
+                        borderColor: 'primary.light',
+                        color: 'primary.light',
                         '&:hover': { 
-                            borderColor: '#e65100', 
-                            color: '#e65100',
-                            backgroundColor: 'rgba(255, 152, 0, 0.1)'
+                            borderColor: 'primary.dark', 
+                            color: 'primary.dark',
+                            backgroundColor: theme.palette.button.hover,
                         },
                         py: { xs: 1.5, sm: 2 },
                         fontWeight: 'bold',
                         fontSize: { xs: '1rem', sm: '1.1rem' }
-                    }}
+                    })}
                 >
                     返回首頁
                 </Button>

@@ -6,6 +6,7 @@ import { vocabularyService, type Vocabulary } from '../../services/VocabularySer
 import type { TestConfig, VocabularyProgress, ProficiencyLevel } from './TestSetup';
 import { favouriteService } from '../../services/FavouriteService';
 import { vocabularyProgressService } from '../../services/VocabularyProgressService';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 interface VocabularyGroup {
     startIndex: number;
@@ -31,6 +32,8 @@ const TestSession = (): JSX.Element => {
     const [hasAnswered, setHasAnswered] = useState(false);
     const [progress, setProgress] = useState<VocabularyProgress[]>([]);
     const [favourites, setFavourites] = useState<number[]>([]);
+	const [isLoadVocabularies, setLoadVocabularies] = useState(false);
+	const [isProgressLoaded, setIsProgressLoaded] = useState(false);
 
     // 載入收藏列表
     useEffect(() => {
@@ -49,6 +52,7 @@ const TestSession = (): JSX.Element => {
     useEffect(() => {
         const loadProgress = async () => {
             try {
+				console.log('loadProgress called at', new Date().toISOString());
                 const savedProgress = await vocabularyProgressService.getProgress();
                 const vocabularyProgress: VocabularyProgress[] = savedProgress.map(p => ({
                     vocabularyId: String(p.vocabularyId),
@@ -58,6 +62,7 @@ const TestSession = (): JSX.Element => {
                 }));
                 setProgress(vocabularyProgress);
                 console.log('✅ 從 Service 載入進度:', vocabularyProgress.length);
+				setIsProgressLoaded(true);
             } catch (error) {
                 console.error('❌ 載入進度失敗:', error);
             }
@@ -78,13 +83,16 @@ const TestSession = (): JSX.Element => {
     // ✅ 載入單字 (只在 config 準備好時執行一次)
     useEffect(() => {
         if (!config) return;
+		if (!isProgressLoaded) return;
 
+		console.log(config);
         const loadVocabularies = async () => {
             try {
                 const vocabularyData = await vocabularyService.getAllVocabulary('en');
                 const filteredVocabularies = filterVocabularies(vocabularyData, config, progress);
                 console.log('篩選後的單字數量:', filteredVocabularies.length);
                 setTestVocabularies(shuffleArray(filteredVocabularies));
+				setLoadVocabularies(true);
             } catch (error) {
                 console.error('Failed to fetch vocabulary:', error);
                 navigate('/test/setup');
@@ -92,7 +100,7 @@ const TestSession = (): JSX.Element => {
         };
 
         loadVocabularies();
-    }, [config, navigate]); // ✅ 只依賴 config
+    }, [config, isProgressLoaded, navigate]);
 
     const handleFavouriteToggle = async (vocabularyIdStr: string) => {
         const vocabularyId = Number(vocabularyIdStr);
@@ -236,8 +244,6 @@ const TestSession = (): JSX.Element => {
             console.error('❌ 同步進度失敗:', error);
         }
 
-
-
         nextVocabulary();
 
     };
@@ -295,13 +301,13 @@ const TestSession = (): JSX.Element => {
     };
 
     const nextVocabulary = () => {
-        if (currentIndex < testVocabularies.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-            setIsFlipped(false);
-            setHasAnswered(false);
-        } else {
-            navigate('/test/results');
-        }
+    if (currentIndex < testVocabularies.length - 1) {
+        setCurrentIndex(prev => prev + 1);  // 仍然用函式更新
+        setIsFlipped(false);
+        setHasAnswered(false);
+    } else {
+        navigate('/test/results');
+    }
     };
 
     const getProficiencyLabel = (level: ProficiencyLevel): string => {
@@ -315,18 +321,59 @@ const TestSession = (): JSX.Element => {
     const getProficiencyColor = (level: ProficiencyLevel): string => {
         switch (level) {
             case 'mastered': return '#4caf50';
-            case 'somewhat_familiar': return '#ff9800';
+            case 'somewhat_familiar': return '#ED6C02';
             case 'not_familiar': return '#f44336';
         }
     };
 
-    if (!config || testVocabularies.length === 0) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-                <Typography>載入中...</Typography>
-            </Box>
-        );
+    if (!config || !isLoadVocabularies) {
+        return <LoadingSpinner message='Loading' />
     }
+
+	if (testVocabularies.length === 0) {
+		console.log(testVocabularies.length);
+		return (
+			<Box sx={{ p: { xs: 3, sm: 4 }, maxWidth: 800, mx: 'auto', textAlign: 'center' }}>
+				<Typography
+					variant="h5"
+					sx={{
+						mb: 2,
+						fontWeight: 'bold',
+						fontSize: { xs: '1.4rem', sm: '1.6rem' }
+					}}
+				>
+					沒有符合條件的單字
+				</Typography>
+
+				<Typography
+					variant="body1"
+					sx={{
+						mb: 4,
+						fontSize: { xs: '0.95rem', sm: '1.05rem' }
+					}}
+				>
+					可以調整等級、單字組、熟練度，或變更「只包括最愛」來放寬條件。
+				</Typography>
+
+				<Button
+					variant="contained"
+					onClick={() => navigate('/test/setup')}
+					sx={theme => ({
+						backgroundColor: theme.palette.primary.light,
+						'&:hover': { backgroundColor: theme.palette.primary.dark },
+						fontWeight: 'bold',
+						fontSize: { xs: '1rem', sm: '1.1rem' },
+						px: { xs: 3.5, sm: 4.5 },
+						py: { xs: 1.4, sm: 1.6 },
+						borderRadius: 2
+					})}
+				>
+					返回測試設定
+				</Button>
+			</Box>
+		);
+	}
+
 
     const currentVocabulary = testVocabularies[currentIndex];
     const progressPercentage = ((currentIndex + 1) / testVocabularies.length) * 100;
@@ -384,12 +431,13 @@ const TestSession = (): JSX.Element => {
                     ))}
                 </Box>
             )}
-
+            {/*
             {!isFlipped && (
-                <Typography variant="body2" textAlign="center" sx={{ mt: 3, color: 'text.secondary' }}>
+                <Typography variant="body2" textAlign="center" sx={{ mt: 3, color: 'text.primary' }}>
                     點擊卡片查看答案
                 </Typography>
             )}
+            */}
         </Box>
     );
 };

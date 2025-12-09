@@ -16,15 +16,16 @@ const KanaGridCell = ({ char, romaji, onClick, gridColumns = 5, isInteractive }:
   return (
     <Grid
       size={{ xs: 1 }}
-      sx={{
+      sx={(theme) => ({
         textAlign: 'center',
-        border: '1px solid #ccc',
+        border: '1px solid',
+        borderColor: '#999999',
         minHeight: 64,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#ff9800',
-        color: '#000000',
+        backgroundColor: theme.palette.primary.light,
+        color: theme.palette.primary.contrastText,
         cursor: hasKana ? 'pointer' : 'default',
         opacity: hasKana ? 1 : 0.5,
         p: 0,
@@ -32,10 +33,10 @@ const KanaGridCell = ({ char, romaji, onClick, gridColumns = 5, isInteractive }:
         minWidth: gridColumns === 3 ? '33.333%' : 'auto',
         ...(hasKana && {
           '&:hover': {
-            backgroundColor: '#e65100',
+            backgroundColor: theme.palette.primary.dark,
           },
         }),
-      }}
+      })}
       onClick={hasKana && isInteractive ? onClick : undefined}
     >
       <Box
@@ -47,6 +48,7 @@ const KanaGridCell = ({ char, romaji, onClick, gridColumns = 5, isInteractive }:
           px: 1,
         }}
       >
+        {/* 左：文字區 */}
         <Box
           sx={{
             display: 'flex',
@@ -55,25 +57,49 @@ const KanaGridCell = ({ char, romaji, onClick, gridColumns = 5, isInteractive }:
             justifyContent: 'center',
           }}
         >
-          <Typography variant="h4" sx={{ userSelect: 'none', lineHeight: 1 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              userSelect: 'none',
+              lineHeight: 0.9,
+              fontSize: {
+                xs: '1.8rem',
+                sm: '2.2rem',
+              },
+            }}
+          >
             {char}
           </Typography>
           <Typography
             variant="body1"
-            sx={{
-              color: '#212121',
+            sx={(theme) => ({
+              color: theme.palette.share.prompt,
               userSelect: 'none',
-              fontSize: 20,
-              lineHeight: 1,
-            }}
+              lineHeight: 0.9,
+              fontSize: {
+                xs: '1rem',
+                sm: '1.2rem',
+              },
+            })}
           >
             {romaji}
           </Typography>
         </Box>
-          {hasKana && (
+
+        {/* 右：發音按鈕區 */}  
+        {hasKana && (
+          <Box
+            sx={{
+              ml: -1,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
             <KanaSpeak char={char} />
-          )}
-        </Box>
+          </Box>
+        )}
+      </Box>
+
     </Grid>
   );
 };

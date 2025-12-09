@@ -23,7 +23,7 @@ const WordGuess = () => {
             setCurrentWord(word);
             setGuessedLetters([]);
         }
-    }, [isReady, getNewWord]);
+    }, [isReady]);
 
     //Derived variables
     const gameStats = useMemo(() => {

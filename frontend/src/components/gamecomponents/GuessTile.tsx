@@ -14,7 +14,7 @@ type GuessTileProps = {
     fontWeight: 'bold',
     transition: 'opacity 0.2s ease-in-out',
     '&.missed': {
-      color: theme.palette.error.dark,
+      color: theme.palette.error.main,
     },
   }));
 
@@ -37,21 +37,22 @@ const GuessTile = memo(({ currentVocabularty, guessedLetters, isGameLost }: Gues
         gap: 1,
         padding: 1,
         width: '100%',
-        maxWidth: '600px',
+        maxWidth: { xs: '600px', sm: '700px'},
       }}
     >
       {letterData.map(({ letter, index, shouldReveal, isMissed }) => (
         <Box
             key={index}
-            sx={{
-                width: { xs: 30, sm: 40 },
-                height: { xs: 30, sm: 40 },
+            sx={(theme) => ({
+                width: { xs: 32, sm: 45 },
+                height: { xs: 32, sm: 45 },
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: '#323232',
-                borderBottom: '1px solid #F9F4DA',
-            }}
+                background: theme.palette.wordGuess.slotBackground,
+                borderBottom: '2px solid',
+                borderColor: theme.palette.text.primary,
+            })}
         >
             <StyledTile className={clsx(isMissed && 'missed')}>
                 {shouldReveal ? letter.toUpperCase() : ''}
