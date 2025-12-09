@@ -15,6 +15,7 @@ const isEdgeBrowser = (): boolean => {
 	return ua.includes("Edg/");
 };
 
+// 英文：瀏覽器內建 Web Speech API（偏好女聲）
 const speakEnglishWebBrowser = (text: string, accent: "en-US" | "en-GB") => {
 	if (!("speechSynthesis" in window)) {
 		console.warn("此瀏覽器不支援 Web Speech API");
@@ -26,6 +27,7 @@ const speakEnglishWebBrowser = (text: string, accent: "en-US" | "en-GB") => {
 
 	const voices = window.speechSynthesis.getVoices();
 
+	// 這裡用常見的女聲名稱，你可以用 console.log(voices) 後依環境調整
 	const preferredName =
 		accent === "en-GB"
 			? "Microsoft Sonia Online (Natural) - English (Great Britain)"
@@ -152,7 +154,7 @@ export const speakKana = async (text: string) => {
 		input: { text },
 		voice: {
 			languageCode: "ja-JP",
-			name: "ja-JP-Standard-B",
+			name: "ja-JP-Standard-B", // Google TTS 的日文女聲
 		},
 		audioConfig: {
 			audioEncoding: "MP3",
