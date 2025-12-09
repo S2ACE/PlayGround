@@ -11,12 +11,33 @@ export function getRandomWord(list: Vocabulary[]): string {
 // 檢測是否為 Edge（Chromium）
 const isEdgeBrowser = (): boolean => {
 	const ua = window.navigator.userAgent;
-	// 新版 Edge UA 會包含 "Edg/"
 	return ua.includes("Edg/");
 };
 
-// 英文：瀏覽器內建 Web Speech API（偏好女聲）
-const speakEnglishWebBrowser = (text: string, accent: "en-US" | "en-GB") => {
+// ---- 共用：載入並快取 voices，避免第一次與之後不一致 ----
+let cachedVoices: SpeechSynthesisVoice[] | null = null;
+
+const loadVoices = (): Promise<SpeechSynthesisVoice[]> => {
+	return new Promise(resolve => {
+		const synth = window.speechSynthesis;
+		const voices = synth.getVoices();
+		if (voices.length > 0) {
+			cachedVoices = voices;
+			resolve(voices);
+			return;
+		}
+		const handle = () => {
+			const vs = synth.getVoices();
+			cachedVoices = vs;
+			synth.removeEventListener("voiceschanged", handle);
+			resolve(vs);
+		};
+		synth.addEventListener("voiceschanged", handle);
+	});
+};
+
+// ---- 英文：瀏覽器內建 Web Speech API（女聲優先） ----
+const speakEnglishWebBrowser = async (text: string, accent: "en-US" | "en-GB") => {
 	if (!("speechSynthesis" in window)) {
 		console.warn("此瀏覽器不支援 Web Speech API");
 		return;
@@ -25,20 +46,24 @@ const speakEnglishWebBrowser = (text: string, accent: "en-US" | "en-GB") => {
 	const utterance = new SpeechSynthesisUtterance(text);
 	utterance.lang = accent;
 
-	const voices = window.speechSynthesis.getVoices();
+	const voices = cachedVoices ?? (await loadVoices());
 
-	// 這裡用常見的女聲名稱，你可以用 console.log(voices) 後依環境調整
+	// 依實際環境調整為你喜歡的女聲名稱
 	const preferredName =
 		accent === "en-GB"
 			? "Microsoft Sonia Online (Natural) - English (Great Britain)"
 			: "Microsoft Aria Online (Natural) - English (United States)";
 
 	const preferredVoice =
-		voices.find(v => v.name === preferredName) || // 優先指定女聲
-		voices.find(v => v.lang === accent && v.name.toLowerCase().includes("female")) ||
-		voices.find(v => v.lang === accent) ||
-		voices.find(v => v.lang.startsWith(accent.split("-")[0])) ||
-		voices.find(v => v.lang.startsWith("en"));
+		voices.find(v => v.name === preferredName) || // 1. 指定女聲
+		voices.find(
+			v =>
+				v.lang === accent &&
+				v.name.toLowerCase().includes("female")
+		) || // 2. 名稱含 female
+		voices.find(v => v.lang === accent) || // 3. 同語系任意 voice
+		voices.find(v => v.lang.startsWith(accent.split("-")[0])) || // 4. en-* 任意
+		voices.find(v => v.lang.startsWith("en")); // 5. 任何英文
 
 	if (preferredVoice) {
 		utterance.voice = preferredVoice;
@@ -47,6 +72,7 @@ const speakEnglishWebBrowser = (text: string, accent: "en-US" | "en-GB") => {
 	window.speechSynthesis.speak(utterance);
 };
 
+// 英文：Google Cloud TTS（女聲）
 const speakEnglishTTS = async (text: string, accent: "en-US" | "en-GB") => {
 	const apiKey = import.meta.env.VITE_TTS_API_KEY;
 	const endpoint = import.meta.env.VITE_TTS_ENDPOINT;
@@ -56,6 +82,7 @@ const speakEnglishTTS = async (text: string, accent: "en-US" | "en-GB") => {
 		return;
 	}
 
+	// Google TTS 的女聲（可按需求調整）
 	const voiceName = accent === "en-GB" ? "en-GB-Standard-A" : "en-US-Standard-C";
 
 	const requestBody = {
@@ -91,24 +118,26 @@ const speakEnglishTTS = async (text: string, accent: "en-US" | "en-GB") => {
 	}
 };
 
+// 對外匯出：智慧選擇英文發音（女聲優先）
 export const speakEnglishSmart = async (text: string, accent: "en-US" | "en-GB") => {
 	try {
 		if (isEdgeBrowser()) {
 			await speakEnglishTTS(text, accent);
 		} else if ("speechSynthesis" in window) {
-			speakEnglishWebBrowser(text, accent);
+			await speakEnglishWebBrowser(text, accent);
 		} else {
 			await speakEnglishTTS(text, accent);
 		}
 	} catch (e) {
 		console.error("英文朗讀錯誤，嘗試後備方案：", e);
 		if ("speechSynthesis" in window) {
-			speakEnglishWebBrowser(text, accent);
+			await speakEnglishWebBrowser(text, accent);
 		}
 	}
 };
 
-export const speakKanaWebBrowser = (text: string) => {
+// ---- 日文：瀏覽器內建 Web Speech API（女聲優先） ----
+export const speakKanaWebBrowser = async (text: string) => {
 	if (!("speechSynthesis" in window)) {
 		console.warn("此瀏覽器不支援 Web Speech API，將改用後備方案");
 		return;
@@ -116,22 +145,23 @@ export const speakKanaWebBrowser = (text: string) => {
 
 	const utterance = new SpeechSynthesisUtterance(text);
 
-	const voices = window.speechSynthesis.getVoices();
+	const voices = cachedVoices ?? (await loadVoices());
 	console.log(voices);
 
+	// 依實際環境調整為你喜歡的日文女聲名稱
 	const preferredName = "Microsoft Ayumi Online (Natural) - Japanese (Japan)";
 
 	const jpVoice =
-		voices.find(v => v.name === preferredName) ||
+		voices.find(v => v.name === preferredName) || // 1. 指定女聲
 		voices.find(
 			v =>
 				v.lang === "ja-JP" &&
 				(v.name.toLowerCase().includes("female") ||
 					v.name.toLowerCase().includes("girl") ||
 					v.name.toLowerCase().includes("ayumi"))
-		) ||
-		voices.find(v => v.lang === "ja-JP" && v.name.toLowerCase().includes("google")) ||
-		voices.find(v => v.lang === "ja-JP");
+		) || // 2. 名稱看起來是女聲
+		voices.find(v => v.lang === "ja-JP" && v.name.toLowerCase().includes("google")) || // 3. Google 日文
+		voices.find(v => v.lang === "ja-JP"); // 4. 任意日文 voice
 
 	if (jpVoice) {
 		utterance.voice = jpVoice;
@@ -141,6 +171,7 @@ export const speakKanaWebBrowser = (text: string) => {
 	window.speechSynthesis.speak(utterance);
 };
 
+// 日文：Google Cloud TTS（女聲）
 export const speakKana = async (text: string) => {
 	const apiKey = import.meta.env.VITE_TTS_API_KEY;
 	const endpoint = import.meta.env.VITE_TTS_ENDPOINT;
@@ -183,19 +214,20 @@ export const speakKana = async (text: string) => {
 	}
 };
 
+// 智慧選擇：Edge 用 Google TTS，其它瀏覽器優先用內建朗讀（女聲優先）
 export const speakKanaSmart = async (text: string) => {
 	try {
 		if (isEdgeBrowser()) {
 			await speakKana(text);
 		} else if ("speechSynthesis" in window) {
-			speakKanaWebBrowser(text);
+			await speakKanaWebBrowser(text);
 		} else {
 			await speakKana(text);
 		}
 	} catch (e) {
 		console.error("朗讀時發生錯誤，嘗試後備方案：", e);
 		if ("speechSynthesis" in window) {
-			speakKanaWebBrowser(text);
+			await speakKanaWebBrowser(text);
 		}
 	}
 };

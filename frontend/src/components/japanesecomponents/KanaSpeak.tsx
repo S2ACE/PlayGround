@@ -14,7 +14,7 @@ const KanaSpeak = ({ char, sx }: KanaSpeakProps): JSX.Element => {
             <IconButton
                 onClick={e => {
                     e.stopPropagation();
-                    speakKanaSmart(char);
+                    void speakKanaSmart(char);
                 }}
                 size="small"
                 tabIndex={-1}
