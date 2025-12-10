@@ -8,9 +8,9 @@ import {
     sendEmailVerification,
     updateProfile,
     updatePassword as firebaseUpdatePassword,
-    EmailAuthProvider, 
+    EmailAuthProvider,
     linkWithCredential,
-    type User
+    type User,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import { API_ENDPOINTS } from '../config/api';
@@ -34,7 +34,6 @@ export class AuthService {
         this.googleProvider.addScope('profile');
         this.googleProvider.addScope('email');
     }
-    
 
     async getMember(): Promise<MemberDto | null> {
         const currentUser = auth.currentUser;
@@ -48,40 +47,40 @@ export class AuthService {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${idToken}`,
                 },
-        });
+            });
 
-        if (!res.ok) return null;
+            if (!res.ok) return null;
 
-        const member = (await res.json()) as MemberDto;
-        return member;
+            const member = (await res.json()) as MemberDto;
+            return member;
         } catch (e) {
-            console.error('讀取會員資料失敗', e);
+            console.error('Failed to load member profile', e);
             return null;
         }
     }
 
-    // ==================== 註冊和登入 ====================
-    
-    // Email 註冊
+    // ==================== Registration & Sign-in ====================
+
+    // Email registration
     async registerWithEmail(email: string, password: string) {
         try {
             const result = await createUserWithEmailAndPassword(auth, email, password);
             console.log('Email registration successful:', result);
-            
-            // ✅ 使用自訂 actionCodeSettings
+
+            // Use custom actionCodeSettings for email verification
             const actionCodeSettings = {
                 url: `${window.location.origin}/email-verified`,
                 handleCodeInApp: true,
             };
-            
+
             await sendEmailVerification(result.user, actionCodeSettings);
-            console.log('✅ 驗證 Email 已發送到:', result.user.email);
+            console.log('✅ Verification email sent to:', result.user.email);
 
             await this.syncUserToDatabase(result.user);
-            
+
             return {
                 user: result.user,
-                emailVerificationSent: true
+                emailVerificationSent: true,
             };
         } catch (error) {
             console.error('Email registration failed:', error);
@@ -89,7 +88,7 @@ export class AuthService {
         }
     }
 
-    // Email 登入
+    // Email sign-in
     async signInWithEmail(email: string, password: string) {
         try {
             const result = await signInWithEmailAndPassword(auth, email, password);
@@ -101,51 +100,53 @@ export class AuthService {
         }
     }
 
-    // Google 登入
+    // Google sign-in
     async signInWithGoogle() {
         try {
-            console.log('🚀 執行 Google 彈窗登入...');
+            console.log('🚀 Starting Google popup sign-in...');
             const result = await signInWithPopup(auth, this.googleProvider);
-            console.log('✅ Google 登入成功:', result.user.email);
-            
+            console.log('✅ Google sign-in success:', result.user.email);
+
             await this.syncUserToDatabase(result.user);
             return result.user;
         } catch (error: any) {
-            console.log('⚠️ Google 登入遇到錯誤:', error.code);
-            
+            console.log('⚠️ Google sign-in error:', error.code);
+
+            // Special handling for account-exists-with-different-credential
             if (error.code === 'auth/account-exists-with-different-credential') {
-                console.log('🔍 檢測到帳戶衝突，準備連結資訊...');
-                
+                console.log('🔍 Account conflict detected, preparing to link...');
+
                 const credential = GoogleAuthProvider.credentialFromError(error);
                 const email = error.customData?.email || error.email;
-                
-                console.log('📧 衝突的 Email:', email);
-                console.log('🔑 Google 憑證:', credential ? '已獲取' : '未獲取');
-                
+
+                console.log('📧 Conflicting email:', email);
+                console.log('🔑 Google credential:', credential ? 'resolved' : 'missing');
+
                 if (!email || !credential) {
-                    console.error('❌ 無法獲取必要的連結資訊');
-                    throw new Error('無法獲取帳戶連結所需的資訊');
+                    console.error('❌ Missing linking information');
+                    throw new Error('Unable to get required information to link accounts');
                 }
-                
+
                 const signInMethods = await this.fetchSignInMethodsForEmail(email);
-                console.log('📋 現有登入方式:', signInMethods);
-                
+                console.log('📋 Existing sign-in methods:', signInMethods);
+
+                // Throw enriched error so UI can handle linking flow
                 throw {
                     ...error,
                     needsLinking: true,
-                    email: email,
-                    credential: credential,
+                    email,
+                    credential,
                     existingMethods: signInMethods,
-                    requiresPassword: signInMethods.includes('password')
+                    requiresPassword: signInMethods.includes('password'),
                 };
             }
-            
-            console.log('🔥 Google 登入其他錯誤:', error.code, error.message);
+
+            console.log('🔥 Other Google sign-in error:', error.code, error.message);
             throw error;
         }
     }
 
-    // 登出
+    // Sign-out
     async signOut() {
         try {
             await signOut(auth);
@@ -155,76 +156,77 @@ export class AuthService {
         }
     }
 
-    // ==================== 帳戶設定功能 ====================
+    // ==================== Account settings ====================
 
-    /**
-     * 更新會員資料（使用後端 API）
-     */
-    async updateMember(displayName?: string, photoURL?: string, darkMode?: boolean): Promise<void> {
+    /* Update member profile via backend API (and Firebase profile when needed). */
+    async updateMember(
+        displayName?: string,
+        photoURL?: string,
+        darkMode?: boolean,
+    ): Promise<void> {
         const currentUser = auth.currentUser;
         if (!currentUser) {
-            throw new Error('用戶未登入');
+            throw new Error('User not signed in');
         }
 
         try {
-            // 1. 更新 Firebase Auth Profile
+            // 1. Update Firebase Auth profile when needed
             const updates: { displayName?: string; photoURL?: string; darkMode?: boolean } = {};
             if (displayName !== undefined) updates.displayName = displayName;
             if (photoURL !== undefined) updates.photoURL = photoURL;
-            
+
             if (Object.keys(updates).length > 0) {
                 await updateProfile(currentUser, updates);
-                console.log('✅ Firebase Profile 已更新');           
+                console.log('✅ Firebase profile updated');
             }
 
-            // 2. 呼叫後端 API 更新資料庫
+            // 2. Update member record via backend API
             const idToken = await currentUser.getIdToken();
-            
+
             const response = await fetch(`${API_ENDPOINTS.MEMBERS}/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${idToken}`
+                    Authorization: `Bearer ${idToken}`,
                 },
                 body: JSON.stringify({
-                    displayName: displayName,
-                    photoURL: photoURL,
-                    darkMode: darkMode
-                })
+                    displayName,
+                    photoURL,
+                    darkMode,
+                }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || '更新會員資料失敗');
+                throw new Error(errorData.message || 'Failed to update member profile');
             }
 
             const updatedMember = await response.json();
-            console.log('✅ 會員資料已更新:', updatedMember);
-
+            console.log('✅ Member profile updated:', updatedMember);
         } catch (error: any) {
-            console.error('❌ 更新會員資料失敗:', error);
+            console.error('❌ Failed to update member profile:', error);
             throw error;
         }
     }
 
-    /**
-     * 更新顯示名稱
-     */
+    /*  Convenience helper: update only display name. */
     async updateDisplayName(displayName: string): Promise<void> {
         await this.updateMember(displayName, undefined, undefined);
     }
 
+    /* Convenience helper: update only dark mode preference. */
     async updateDarkMode(darkMode: boolean): Promise<void> {
         await this.updateMember(undefined, undefined, darkMode);
     }
 
+    /* Upload avatar to Supabase Storage and update profile. */
     async updateAvatar(file: File): Promise<void> {
         const currentUser = auth.currentUser;
         if (!currentUser) {
-            throw new Error('用戶未登入');
+            throw new Error('User not signed in');
         }
 
-        // 1. 上傳到 Supabase Storage
+        // 1. Upload to Supabase Storage (upsert)
         const filePath = `${currentUser.uid}`;
         const { data, error: uploadError } = await SupabaseClient.storage
             .from('avatars')
@@ -233,10 +235,11 @@ export class AuthService {
         console.log('upload result', { data, uploadError });
 
         if (uploadError) {
-            console.error('上傳頭像失敗:', uploadError);
+            console.error('Avatar upload failed:', uploadError);
             throw uploadError;
         }
 
+        // 2. Get public URL and cache-bust it to avoid stale avatar in browser
         const {
             data: { publicUrl },
         } = SupabaseClient.storage.from('avatars').getPublicUrl(filePath);
@@ -246,88 +249,85 @@ export class AuthService {
         await this.updateMember(undefined, cacheBustedUrl, undefined);
     }
 
-    /**
-     * 為現有用戶新增密碼（Account Linking）
-     */
+    /* Add password credential to the current user (account linking). */
     async addPasswordToCurrentUser(password: string): Promise<void> {
         const currentUser = auth.currentUser;
         if (!currentUser) {
-            throw new Error('用戶未登入');
+            throw new Error('User not signed in');
         }
 
         if (!currentUser.email) {
-            throw new Error('用戶沒有 Email 地址');
+            throw new Error('User has no email address');
         }
 
         try {
-            // 建立 Email/Password 憑證
+            // Create Email/Password credential
             const credential = EmailAuthProvider.credential(currentUser.email, password);
-            
-            // 連結到現有帳戶
-            await linkWithCredential(currentUser, credential);
-            
-            console.log('✅ 密碼已成功連結到帳戶');
 
-            // ✅ 關鍵步驟：重新載入用戶資料（獲取最新的 providerData）
+            // Link password credential to existing account
+            await linkWithCredential(currentUser, credential);
+
+            console.log('✅ Password linked to account');
+
+            // Reload to get latest providerData
             await currentUser.reload();
-            console.log('✅ 用戶資料已重新載入');
-            console.log("currentuser.emailVerified:" + currentUser.emailVerified);
-            // 同步到資料庫（更新 providers 資訊）
+            console.log('✅ User data reloaded');
+            console.log('currentUser.emailVerified:', currentUser.emailVerified);
+
+            // Sync to database with updated providers
             await this.syncUserToDatabase(currentUser);
             await currentUser.reload();
         } catch (error: any) {
-            console.error('❌ 連結密碼失敗:', error);
-            
+            console.error('❌ Failed to link password:', error);
+
             if (error.code === 'auth/provider-already-linked') {
-                throw new Error('此帳戶已設定密碼');
+                throw new Error('Password is already set for this account');
             } else if (error.code === 'auth/weak-password') {
-                throw new Error('密碼強度太弱，請設定至少 6 個字元');
+                throw new Error('Password is too weak, please use at least 6 characters');
             } else if (error.code === 'auth/email-already-in-use') {
-                throw new Error('此 Email 已被其他帳戶使用');
+                throw new Error('This email is already in use by another account');
             } else if (error.code === 'auth/requires-recent-login') {
-                throw new Error('請重新登入後再試');
+                throw new Error('Please sign in again before updating password');
             }
-            
+
             throw error;
         }
     }
 
-    /**
-     * 更改密碼（需要最近登入）
-     */
+    /*  Update password for the current user (requires recent sign-in). */
     async updatePassword(newPassword: string): Promise<void> {
         const currentUser = auth.currentUser;
         if (!currentUser) {
-            throw new Error('用戶未登入');
+            throw new Error('User not signed in');
         }
 
         try {
             await firebaseUpdatePassword(currentUser, newPassword);
-            console.log('✅ 密碼已更新');
+            console.log('✅ Password updated');
         } catch (error: any) {
-            console.error('❌ 更新密碼失敗:', error);
-            
+            console.error('❌ Failed to update password:', error);
+
             if (error.code === 'auth/weak-password') {
-                throw new Error('密碼強度太弱，請設定至少 6 個字元');
+                throw new Error('Password is too weak, please use at least 6 characters');
             } else if (error.code === 'auth/requires-recent-login') {
-                throw new Error('基於安全考量，請重新登入後再更改密碼');
+                throw new Error(
+                    'For security reasons, please sign in again before changing your password',
+                );
             }
-            
+
             throw error;
         }
     }
 
-    /**
-     * 檢查是否有密碼登入方式
-     */
+    /* Check if current user has an Email/Password provider linked. */
     hasPasswordProvider(): boolean {
         const currentUser = auth.currentUser;
         if (!currentUser) return false;
-        
-        return currentUser.providerData.some(provider => provider.providerId === 'password');
+
+        return currentUser.providerData.some((provider) => provider.providerId === 'password');
     }
 
-    // ==================== Email 檢查功能 ====================
+    // ==================== Email / account status helpers ====================
 
     async checkEmailRegistrationStatus(email: string): Promise<{
         exists: boolean;
@@ -343,24 +343,24 @@ export class AuthService {
         };
     }> {
         try {
-            console.log('🔍 開始檢查 Email 狀態:', email);
-            
-            // 檢查資料庫
-            console.log('📊 檢查資料庫...');
+            console.log('🔍 Checking email status:', email);
+
+            // Check in application database
+            console.log('📊 Checking database...');
             let databaseResult;
             try {
                 databaseResult = await this.checkEmailInDatabase(email);
-                console.log('📊 資料庫檢查結果:', databaseResult);
+                console.log('📊 Database check result:', databaseResult);
             } catch (err) {
-                console.warn('⚠️ 資料庫檢查失敗:', err);
+                console.warn('⚠️ Database check failed:', err);
                 databaseResult = { exists: false, providers: [] };
             }
 
             const accountExists = databaseResult.exists;
             const providers = databaseResult.providers || [];
 
-            console.log('- 資料庫存在:', accountExists);
-            console.log('- 提供者列表:', providers);
+            console.log('- Exists in DB:', accountExists);
+            console.log('- Provider list:', providers);
 
             const hasEmailProvider = providers.includes('email');
             const hasGoogleProvider = providers.includes('google');
@@ -370,19 +370,21 @@ export class AuthService {
                 hasEmailProvider,
                 hasGoogleProvider,
                 providers,
-                databaseInfo: accountExists ? {
-                    userId: databaseResult.userId,
-                    provider: databaseResult.provider,
-                    providers: providers,
-                    registeredAt: databaseResult.registeredAt,
-                    providerCount: providers.length
-                } : undefined
+                databaseInfo: accountExists
+                    ? {
+                          userId: databaseResult.userId,
+                          provider: databaseResult.provider,
+                          providers,
+                          registeredAt: databaseResult.registeredAt,
+                          providerCount: providers.length,
+                      }
+                    : undefined,
             };
 
-            console.log('✅ 最終檢查結果:', result);
+            console.log('✅ Final email status result:', result);
             return result;
         } catch (error) {
-            console.error('❌ 檢查 Email 狀態失敗:', error);
+            console.error('❌ Failed to check email status:', error);
             throw error;
         }
     }
@@ -400,7 +402,7 @@ export class AuthService {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email }),
             });
 
             if (!response.ok) {
@@ -408,58 +410,59 @@ export class AuthService {
             }
 
             const result = await response.json();
-            console.log('📊 資料庫 Email 檢查結果:', result);
+            console.log('📊 Database email check result:', result);
 
             return {
                 exists: Boolean(result.exists),
                 userId: result.id || undefined,
                 providers: result.providers || [],
                 registeredAt: result.registeredAt || undefined,
-                provider: result.providers?.[0] || undefined
+                provider: result.providers?.[0] || undefined,
             };
         } catch (error) {
-            console.error('❌ 檢查資料庫 Email 失敗:', error);
+            console.error('❌ Failed to check email in database:', error);
             throw error;
         }
     }
 
     async fetchSignInMethodsForEmail(email: string): Promise<string[]> {
         try {
-            console.log('正在檢查 Firebase Email:', email);
+            console.log('Checking Firebase sign-in methods for email:', email);
             const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-            console.log(`✅ Firebase 檢查成功 - Email: ${email}, 方法:`, signInMethods);
+            console.log('✅ Firebase methods:', email, signInMethods);
             return signInMethods;
         } catch (error: any) {
-            console.error('❌ Firebase 檢查失敗:', error);
-            console.error('錯誤代碼:', error.code);
-            console.error('錯誤訊息:', error.message);
-            
+            console.error('❌ Firebase sign-in methods check failed:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
+
+            // Normalize errors to an empty list so caller can handle gracefully
             switch (error.code) {
                 case 'auth/invalid-email':
-                    console.error('無效的電子郵件格式');
+                    console.error('Invalid email format');
                     return [];
                 case 'auth/network-request-failed':
-                    console.error('網路連線失敗');
+                    console.error('Network request failed');
                     return [];
                 case 'auth/configuration-not-found':
-                    console.error('Firebase 配置錯誤');
+                    console.error('Firebase configuration error');
                     return [];
                 case 'auth/invalid-api-key':
-                    console.error('Firebase API 金鑰無效');
+                    console.error('Invalid Firebase API key');
                     return [];
                 default:
-                    console.warn('Firebase 檢查失敗，返回空結果:', error.code);
+                    console.warn('Firebase check failed, returning empty result:', error.code);
                     return [];
             }
         }
     }
 
-    // ==================== 工具方法 ====================
+    // ==================== Utility helpers ====================
 
-    // 同步用戶到資料庫
+    // Sync Firebase user to application database
     private async syncUserToDatabase(user: User) {
         const providers = this.getAllProviders(user);
-        
+
         const userData = {
             id: user.uid,
             email: user.email,
@@ -467,40 +470,41 @@ export class AuthService {
             photoURL: user.photoURL,
             emailVerified: user.emailVerified,
             lastLoginAt: new Date().toISOString(),
-            providers: providers  // ✅ 傳送所有 providers
+            providers, // send full provider list to backend
         };
-        console.log('🔄 同步用戶到資料庫:', userData);
+        console.log('🔄 Syncing user to database:', userData);
+
         try {
             const idToken = await user.getIdToken();
             const response = await fetch(`${API_ENDPOINTS.AUTH}/sync`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${idToken}`
+                    Authorization: `Bearer ${idToken}`,
                 },
-                body: JSON.stringify(userData)
+                body: JSON.stringify(userData),
             });
 
             if (!response.ok) {
-                throw new Error('資料庫同步失敗');
+                throw new Error('Failed to sync user with database');
             }
 
-            console.log('✅ 資料庫同步成功:', await response.json());
+            console.log('✅ Database sync success:', await response.json());
         } catch (error) {
-            console.error('❌ 資料庫同步失敗:', error);
+            console.error('❌ Database sync failed:', error);
         }
     }
 
-    // ✅ 取得所有 providers
+    // Get normalized list of all providers for a user
     private getAllProviders(user: User): Array<{ provider: string; providerId: string }> {
         if (!user.providerData || user.providerData.length === 0) {
             console.warn('⚠️ User providerData is empty or null', user.uid);
-            throw new Error('無法取得用戶的認證提供者資訊');
+            throw new Error('Unable to get authentication provider info for user');
         }
 
-        return user.providerData.map(providerInfo => {
+        return user.providerData.map((providerInfo) => {
             const providerId = providerInfo.providerId;
-            
+
             if (providerId === 'google.com') {
                 return { provider: 'google', providerId: 'google.com' };
             } else if (providerId === 'password') {
@@ -510,49 +514,48 @@ export class AuthService {
             } else if (providerId === 'apple.com') {
                 return { provider: 'apple', providerId: 'apple.com' };
             }
-            
-            // 預設處理其他 provider
-            return { 
-                provider: providerId.replace('.com', ''), 
-                providerId: providerId 
+
+            // Default fallback for other providers
+            return {
+                provider: providerId.replace('.com', ''),
+                providerId,
             };
         });
     }
 
-
-    // 取得當前用戶
+    // Get current Firebase user directly from auth instance
     getCurrentUser(): User | null {
         return auth.currentUser;
     }
 
-    // 檢查用戶是否已登入
+    // Simple flag for "is user signed in"
     isAuthenticated(): boolean {
         return auth.currentUser !== null;
     }
 
-    // 重設密碼
+    // Send password reset email
     async sendPasswordResetEmail(email: string) {
         try {
             const { sendPasswordResetEmail } = await import('firebase/auth');
             await sendPasswordResetEmail(auth, email);
-            console.log('密碼重設郵件已發送');
+            console.log('Password reset email sent');
         } catch (error) {
-            console.error('發送密碼重設郵件失敗:', error);
+            console.error('Failed to send password reset email:', error);
             throw error;
         }
     }
 
-    // 驗證Email
+    // Send email verification to current user
     async sendEmailVerification() {
         try {
             const { sendEmailVerification } = await import('firebase/auth');
             const currentUser = auth.currentUser;
             if (currentUser && !currentUser.emailVerified) {
                 await sendEmailVerification(currentUser);
-                console.log('驗證郵件已發送');
+                console.log('Verification email sent');
             }
         } catch (error) {
-            console.error('發送驗證郵件失敗:', error);
+            console.error('Failed to send verification email:', error);
             throw error;
         }
     }

@@ -2,11 +2,11 @@ import { useState, useEffect, type JSX } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/system';
 
-type LoadingSpinnerProps = {
-    message?: string;
-    minHeight?: string;
-    variant?: 'h4' | 'h5' | 'h6' | 'body1';
-    sx?: SxProps<Theme>;
+interface LoadingSpinnerProps {
+	message?: string;
+	minHeight?: string;
+	variant?: 'h4' | 'h5' | 'h6' | 'body1';
+	sx?: SxProps<Theme>;
 }
 
 const LoadingSpinner = ({ 

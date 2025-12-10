@@ -3,14 +3,14 @@ import { styled } from "@mui/material/styles";
 import clsx from 'clsx';
 import { useMemo, memo, type JSX } from 'react';
 
-type GuessTileProps = {
-    currentVocabularty: string;
-    guessedLetters: string[];
-    isGameLost: boolean;
-};
+interface GuessTileProps {
+	currentVocabularty: string;
+	guessedLetters: string[];
+	isGameLost: boolean;
+}
 
-  const StyledTile = styled('span')(({ theme }) => ({
-    fontSize: 'clamp(1rem, 2.5vw, 1.4rem)',
+	const StyledTile = styled('span')(({ theme }) => ({
+	fontSize: 'clamp(1rem, 2.5vw, 1.4rem)',
     fontWeight: 'bold',
     transition: 'opacity 0.2s ease-in-out',
     '&.missed': {
@@ -20,7 +20,7 @@ type GuessTileProps = {
 
 const GuessTile = memo(({ currentVocabularty, guessedLetters, isGameLost }: GuessTileProps): JSX.Element => {
   const letterData = useMemo(() => {
-        return currentVocabularty.split('').map((letter: string, index: number) => ({
+    	return currentVocabularty.split('').map((letter: string, index: number) => ({
           letter,
           index,
           shouldReveal: isGameLost || guessedLetters.includes(letter),

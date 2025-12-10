@@ -10,21 +10,21 @@ declare module '@mui/material/styles' {
       disable: string;
     };
     share: {
-      prompt: string,
-      buttonBackground: string,
-      divider: string,
+      prompt: string;
+      buttonBackground: string;
+      divider: string;
     };
     wordCard: {
       fontColor: string;
-    },
+    };
     paper: {
       background: string;
-    },
+    };
     button: {
       hover: string;
-    }    
+    };
   }
-  
+
   interface PaletteOptions {
     wordGuess?: {
       slotBorder: string;
@@ -34,63 +34,63 @@ declare module '@mui/material/styles' {
       disable: string;
     };
     share?: {
-      prompt?: string,
-      buttonBackground?: string,
-      divider?: string,
-      paperBackground?: string,
+      prompt?: string;
+      buttonBackground?: string;
+      divider?: string;
+      paperBackground?: string;
     };
     wordCard?: {
       fontColor?: string;
-    },
+    };
     paper?: {
       background: string;
-    },
+    };
     button?: {
       hover?: string;
-    }        
+    };
   }
 }
 
-// Dark Theme
+/* Dark theme configuration. */
 export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      light: '#FF9800',      // 亮黃橘色（按鈕主色）
-      main:  '#ED6C02',    
+      light: '#FF9800',      // Bright orange (main button color)
+      main: '#ED6C02',
       dark: '#E65100',
-      contrastText: '#000', // 黑字
+      contrastText: '#000',  // Black text
     },
     secondary: {
-      main: '#525252',      // 灰色（副色/強調）
+      main: '#525252',       // Gray (secondary/emphasis)
       dark: '#424242',
     },
     background: {
-      default: '#181515',   // 深黑色背景#242424
-      paper: '#2a2a2a',     // 卡片/面板背景
+      default: '#181515',    // Deep dark background
+      paper: '#2a2a2a',      // Card/panel background
     },
     text: {
-      primary: '#f5f0e6',   // 白色文字
+      primary: '#f5f0e6',    // Light text
       secondary: '#2b2118',
     },
     success: {
-      main: '#1b5e20',      // 綠色（正確按鈕）
+      main: '#1b5e20',       // Green (success buttons)
     },
     error: {
-      main: '#c62828',      // 紅色（錯誤按鈕）
+      main: '#c62828',       // Red (error buttons)
     },
     wordGuess: {
-      slotBorder: '#F9F4DA',   // 白色格子邊框
+      slotBorder: '#F9F4DA', // Slot border color
       slotBackground: '#323232',
-      buttonBorder: '#ffffff', // 白色按鈕邊框
-      inactiveKey: '#424242',  // 深灰色不可用按鍵
-      disable: '#242323',  // 黑色禁用文字
+      buttonBorder: '#ffffff',
+      inactiveKey: '#424242',
+      disable: '#242323',
     },
     share: {
-      prompt: '#666666', // 深灰色分享提示文字
-      buttonBackground: '#fff3e0', // 淺橘色分享按鈕背景
+      prompt: '#666666',          // Share prompt text
+      buttonBackground: '#fff3e0',// Share button background
       divider: '#FF9800',
-    },   
+    },
     wordCard: {
       fontColor: '#2b2118',
     },
@@ -98,52 +98,52 @@ export const darkTheme = createTheme({
       background: '#2A2A2A',
     },
     button: {
-      hover: 'rgba(255, 152, 0, 0.18)', // dark 專用 hover
+      hover: 'rgba(255, 152, 0, 0.18)', // Dark-mode hover color
     },
   },
   typography: {
-    fontFamily: '"Press Start 2P", "Roboto", sans-serif', // 像素風格字體
+    fontFamily: '"Press Start 2P", "Roboto", sans-serif',
   },
 });
 
-// Light Theme
+/* Light theme configuration. */
 export const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
       light: '#FF9800',
-      main:  '#ED6C02',  
+      main: '#ED6C02',
       dark: '#E65100',
-      contrastText: '#000', // 黑字
+      contrastText: '#000', // Black text
     },
     secondary: {
-      main: '#bdbdbd',      // 藍灰色（副色/強調）
+      main: '#bdbdbd',
       dark: '#757575',
     },
     background: {
-      default: '#f5f5f5',   // 淺灰白背景
-      paper: '#f5f5f5',     // 純白卡片
+      default: '#f5f5f5',   // Light gray background
+      paper: '#f5f5f5',     // Paper/card background
     },
     text: {
-      primary: '#212121',   // 深灰黑文字
-      secondary: '#424242', // 中灰文字
+      primary: '#212121',   // Dark text
+      secondary: '#424242',
     },
-    success:{
-      main: '#4caf50',      // 綠色（正確按鈕）
+    success: {
+      main: '#4caf50',
     },
     error: {
-      main: '#ef5350',      // 紅色（錯誤按鈕）
+      main: '#ef5350',
     },
     wordGuess: {
-      slotBorder: '#000000',   // 黑色格子邊框
+      slotBorder: '#000000',
       slotBackground: '#bdbdbd',
-      buttonBorder: '#000000', // 黑色按鈕邊框
-      inactiveKey: '#bdbdbd',  // 淺灰色不可用按鍵
-      disable: '#242323',  // 黑色禁用文字
+      buttonBorder: '#000000',
+      inactiveKey: '#bdbdbd',
+      disable: '#242323',
     },
     share: {
-      prompt: '#666666', // 深灰色分享提示文字
-      buttonBackground: '#fff3e0', // 淺橘色分享按鈕背景
+      prompt: '#666666',
+      buttonBackground: '#fff3e0',
       divider: '#FF9800',
     },
     wordCard: {
@@ -151,10 +151,10 @@ export const lightTheme = createTheme({
     },
     paper: {
       background: '#fff3e0',
-    },    
+    },
     button: {
-      hover: 'rgba(255, 152, 0, 0.35)', // light 專用 hover（在白底也看得見）
-    },    
+      hover: 'rgba(255, 152, 0, 0.35)', // Light-mode hover color
+    },
   },
   typography: {
     fontFamily: '"Press Start 2P", "Roboto", sans-serif',

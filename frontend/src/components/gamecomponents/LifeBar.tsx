@@ -13,19 +13,19 @@ import emptyHeartBreakImgLight from '../../assets/empty_heart_break_light.png';
 import filledHeartImgDark from '../../assets/filled_heart_dark.png';
 import emptyHeartBreakImgDark from '../../assets/empty_heart_break_dark.png';
 
-export type LifeBarProps = {
+export interface LifeBarProps {
 	maxLives: number;
 	livesLeft: number;
-};
+}
 
-const HIT_DURATION = 350; // ms
+const HIT_DURATION = 350;
 
 const LifeBar = memo(({ maxLives, livesLeft }: LifeBarProps): JSX.Element => {
 	const theme = useTheme();
 	const prevLivesRef = useRef(livesLeft);
 	const [hitHeartId, setHitHeartId] = useState<number | null>(null);
 
-	// 偵測「失去一條命」那一顆
+	// Detect which heart just got lost (life decreased)
 	useEffect(() => {
 		const prevLives = prevLivesRef.current;
 
@@ -77,7 +77,7 @@ const LifeBar = memo(({ maxLives, livesLeft }: LifeBarProps): JSX.Element => {
 							height: { xs: '28px', sm: '38px' },
 							transformOrigin: 'center center',
 
-							// 平常心跳
+							// Normal heartbeat animation
 							'@keyframes heartbeat': {
 								'0%': { transform: 'scale(1)' },
 								'20%': { transform: 'scale(1.15)' },
@@ -87,7 +87,7 @@ const LifeBar = memo(({ maxLives, livesLeft }: LifeBarProps): JSX.Element => {
 								'100%': { transform: 'scale(1)' },
 							},
 
-							// 扣血那一瞬間：向上抖一下再落回來 + 淡出一點
+							// Hit animation: small jump up, then fall back and fade
 							'@keyframes hitHeart': {
 								'0%': {
 									transform: 'translateY(0) scale(1)',

@@ -41,9 +41,9 @@ const LetterSelection = (): JSX.Element => {
         fetchData();
     }, [level]);
 
-    // 核心功能：創建 20 個單字的分組
+    // Group words for a given level into chunks of 20 words, sorted alphabetically
     const createWordGroups = (data: Vocabulary[], currentLevel: string): WordGroup[] => {
-        // 1. 先獲取該等級的所有單字並按字母排序
+        // 1. Filter by level and sort by first letter, then full word
         const levelWords = data
             .filter(word => word.level === currentLevel)
             .sort((a, b) => {
@@ -58,7 +58,7 @@ const LetterSelection = (): JSX.Element => {
 
         console.log(`Level ${currentLevel} total words:`, levelWords.length);
 
-        // 2. 按每 20 個單字分組
+        // 2. Split into groups of 20 words
         const groups: WordGroup[] = [];
         const groupSize = 20;
 
@@ -67,7 +67,7 @@ const LetterSelection = (): JSX.Element => {
             const endIndex = Math.min(i + groupSize - 1, levelWords.length - 1);
             const groupWords = levelWords.slice(startIndex, endIndex + 1);
             const groupIndex = Math.floor(i / groupSize) + 1;
-            
+            // Display name like "A-C" or "B" based on first/last word in group
             const displayName = createGroupDisplayName(groupWords);
             
             groups.push({
@@ -88,7 +88,8 @@ const LetterSelection = (): JSX.Element => {
 
         return groups;
     };
-
+    
+    // Build label for a group, e.g. "A-C" or "B" if all words start with same letter
     const createGroupDisplayName = (words: Vocabulary[]): string => {
         if (words.length === 0) return '';
 

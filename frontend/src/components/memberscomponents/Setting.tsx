@@ -12,22 +12,26 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import AvatarEditor from 'react-avatar-editor';
 
 const Settings = (): JSX.Element | null => {
+    // Auth context and global user info
     const { user, loading: authLoading, refreshUser } = useAuth();
-    const [editing, setEditing] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState('');
-    const [error, setError] = useState('');
+
+    // UI & form state
+    const [editing, setEditing] = useState(false);              // Editing display name mode
+    const [loading, setLoading] = useState(false);              // Generic loading flag for actions
+    const [success, setSuccess] = useState('');                 // Global success message banner
+    const [error, setError] = useState('');                     // Global error message banner
     const [displayName, setDisplayName] = useState(user?.displayName || '');
     const [showPasswordDialog, setShowPasswordDialog] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
-    const [avatarUploading, setAvatarUploading] = useState(false);
+    const [passwordError, setPasswordError] = useState('');     // Inline error for password dialog
+    const [avatarUploading, setAvatarUploading] = useState(false); // Avatar upload in progress
 
+    // Auth provider flags (Google / email-password)
     const hasGoogleProvider = user?.providerData.some(p => p.providerId === 'google.com');
     const hasPasswordProvider = user?.providerData.some(p => p.providerId === 'password');
     const googleEmail = user?.providerData.find(p => p.providerId === 'google.com')?.email;
-    //avater
+    // Avatar cropping dialog state
     const [showCropDialog, setShowCropDialog] = useState(false);
     const [rawImage, setRawImage] = useState<File | null>(null);
     const [editorScale, setEditorScale] = useState(2);
@@ -201,7 +205,7 @@ const Settings = (): JSX.Element | null => {
                 mx: 'auto',
                 width: '100%'
             }}>
-                {/* 標題 */}
+                {/* Title */}
                 <Typography
                     variant="h4"
                     sx={{
@@ -214,7 +218,7 @@ const Settings = (): JSX.Element | null => {
                     ⚙️ 帳戶設定
                 </Typography>
 
-                {/* 成功/錯誤訊息 */}
+                {/* Success,error messages */}
                 {success && (
                     <Alert
                         severity="success"
@@ -240,7 +244,7 @@ const Settings = (): JSX.Element | null => {
                     </Alert>
                 )}
 
-                {/* 個人資料區塊 */}
+                {/* Profile section */}
                 <Paper sx={(theme) => ({
                     bgcolor: 'background.paper',
                     p: { xs: 2, sm: 3 },
@@ -260,7 +264,7 @@ const Settings = (): JSX.Element | null => {
                         👤 個人資料
                     </Typography>
 
-                    {/* 頭像和 Email */}
+                    {/* Avatar & email */}
                     <Stack
                         direction={{ xs: 'column', sm: 'row' }}
                         spacing={2}
@@ -323,7 +327,7 @@ const Settings = (): JSX.Element | null => {
 
                     <Divider sx={(theme) => ({ my: { xs: 2, sm: 3 }, borderColor: theme.palette.primary.light })} />
 
-                    {/* 顯示名稱 */}
+                      {/* Display name */}
                     <Box>
                         <Typography
                             sx={{
@@ -413,7 +417,7 @@ const Settings = (): JSX.Element | null => {
                     </Box>
                 </Paper>
 
-                {/* 登入方式區塊 */}
+                {/* Sign-in methods section */}
                 <Paper sx={(theme) => ({
                     bgcolor: 'background.paper',
                     p: { xs: 2, sm: 3 },
@@ -432,7 +436,7 @@ const Settings = (): JSX.Element | null => {
                         🔐 登入方式
                     </Typography>
 
-                    {/* Google 綁定 */}
+                    {/* Google provider */}
                     {hasGoogleProvider && (
                         <Box
                             sx={(theme) => ({
@@ -481,7 +485,7 @@ const Settings = (): JSX.Element | null => {
                         </Box>
                     )}
 
-                    {/* ✅ 密碼設定 - 加上 Box 黑色框層 */}
+                      {/* Password provider box */}
                     <Box
                         sx={(theme) => ({
                             bgcolor: theme.palette.paper.background,
@@ -538,7 +542,7 @@ const Settings = (): JSX.Element | null => {
                     </Box>
                 </Paper>
 
-                {/* 密碼設定對話框 */}
+                {/* Password dialog */}
                 <Dialog
                     open={showPasswordDialog}
                     onClose={() => {
@@ -634,7 +638,7 @@ const Settings = (): JSX.Element | null => {
                         </Button>
                     </DialogActions>
                 </Dialog>
-
+                {/* Avatar crop dialog */}           
                 <Dialog
                     open={showCropDialog}
                     onClose={(_, reason) => {
@@ -674,7 +678,7 @@ const Settings = (): JSX.Element | null => {
                             pt: { xs: 1, sm: 2 },
                         }}
                     >
-                        {/* 裁剪區：touchAction 只包住 AvatarEditor，手機可拖動 */}
+                         {/* Crop area: wrap AvatarEditor with touchAction so mobile drag works */}
                         <Box 
                             sx={{ touchAction: 'none' }}
                             onTouchMove={(e) => e.preventDefault()}
@@ -694,7 +698,7 @@ const Settings = (): JSX.Element | null => {
                             )}
                         </Box>
 
-                        {/* 縮放控制條 */}
+                        {/* Scale slider */}
                         <Box sx={{ width: '100%', px: { xs: 1, sm: 3 } }}>
                             <Typography
                                 variant="body2"
@@ -757,10 +761,6 @@ const Settings = (): JSX.Element | null => {
                         </Button>
                     </DialogActions>
                 </Dialog>
-
-
-
-
             </Box>
         </Box>
     );

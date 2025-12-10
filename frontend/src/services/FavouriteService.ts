@@ -1,7 +1,6 @@
 import { auth } from '../firebase/config';
 import { API_ENDPOINTS } from '../config/api';
 
-
 const LOCALSTORAGE_KEY = 'favouriteVocab';
 
 export interface FavouriteVocabularyResponse {
@@ -17,6 +16,7 @@ export interface BulkFavouritesResponse {
 }
 
 export class FavouriteService {
+    // Debounced operations for each vocabulary id (to avoid spamming API)
     private pendingOperations: Map<number, NodeJS.Timeout> = new Map();
     private readonly DEBOUNCE_DELAY = 500;
 
@@ -24,11 +24,12 @@ export class FavouriteService {
         return !!auth.currentUser;
     }
 
-    // ==================== 樂觀更新 + Debounce ====================
+    // ==================== Optimistic update + debounce ====================
     async toggleFavourite(vocabularyId: number, currentIsFavourite: boolean): Promise<boolean> {
         const newIsFavourite = !currentIsFavourite;
 
         if (FavouriteService.isUserLoggedIn()) {
+            // Clear any previous pending operation for this vocabulary
             if (this.pendingOperations.has(vocabularyId)) {
                 clearTimeout(this.pendingOperations.get(vocabularyId)!);
             }
@@ -42,12 +43,13 @@ export class FavouriteService {
                     }
                     this.pendingOperations.delete(vocabularyId);
                 } catch (error) {
-                    console.error('❌ API 請求失敗:', error);
+                    console.error('❌ Favourite API request failed:', error);
                 }
             }, this.DEBOUNCE_DELAY);
 
             this.pendingOperations.set(vocabularyId, timeoutId);
         } else {
+            // Guest mode: store favourites in localStorage only
             if (newIsFavourite) {
                 this.addFavouriteToLocalStorage(vocabularyId);
             } else {
@@ -55,10 +57,11 @@ export class FavouriteService {
             }
         }
 
+        // Return the new favourite state for optimistic UI update
         return newIsFavourite;
     }
 
-    // ==================== 取得收藏 ID 列表 ====================
+    // ==================== Get favourite id list ====================
     async getFavouriteIds(): Promise<number[]> {
         if (FavouriteService.isUserLoggedIn()) {
             return await this.getFavouriteIdsFromDatabase();
@@ -70,75 +73,78 @@ export class FavouriteService {
     private async getFavouriteIdsFromDatabase(): Promise<number[]> {
         try {
             const user = auth.currentUser;
-            if (!user) throw new Error('用戶未登入');
+            if (!user) throw new Error('User not signed in');
 
             const idToken = await user.getIdToken();
             const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${idToken}`,
-                    'Content-Type': 'application/json'
-                }
+                    Authorization: `Bearer ${idToken}`,
+                    'Content-Type': 'application/json',
+                },
             });
 
-            if (!response.ok) throw new Error('取得收藏列表失敗');
+            if (!response.ok) throw new Error('Failed to load favourites');
 
             const data: FavouriteVocabularyResponse = await response.json();
             return data.vocabularyIds || [];
         } catch (error) {
-            console.error('❌ 從資料庫取得失敗:', error);
+            console.error('❌ Failed to load favourites from database:', error);
             return [];
         }
     }
 
     private async addFavouriteToDatabase(vocabularyId: number): Promise<void> {
         const user = auth.currentUser;
-        if (!user) throw new Error('用戶未登入');
+        if (!user) throw new Error('User not signed in');
 
         const idToken = await user.getIdToken();
         const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${idToken}`,
-                'Content-Type': 'application/json'
+                Authorization: `Bearer ${idToken}`,
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ vocabularyId })
+            body: JSON.stringify({ vocabularyId }),
         });
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || '新增收藏失敗');
+            throw new Error(errorData.message || 'Failed to add favourite');
         }
     }
 
     private async removeFavouriteFromDatabase(vocabularyId: number): Promise<void> {
         const user = auth.currentUser;
-        if (!user) throw new Error('用戶未登入');
+        if (!user) throw new Error('User not signed in');
 
         const idToken = await user.getIdToken();
-        const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}/${vocabularyId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${idToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        const response = await fetch(
+            `${API_ENDPOINTS.FAVOURITES}/${user.uid}/${vocabularyId}`,
+            {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${idToken}`,
+                    'Content-Type': 'application/json',
+                },
+            },
+        );
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || '移除收藏失敗');
+            throw new Error(errorData.message || 'Failed to remove favourite');
         }
     }
 
-    // ==================== localStorage 操作 (支援 string[] 格式) ====================
+    // ==================== localStorage operations (supports legacy string[] format) ====================
     private getFavouriteIdsFromLocalStorage(): number[] {
         try {
             const data = localStorage.getItem(LOCALSTORAGE_KEY);
             if (!data) return [];
-            
+
             const parsed = JSON.parse(data);
-            // ✅ 支援您現有的 string[] 格式,轉換為 number[]
-            return Array.isArray(parsed) ? parsed.map(id => Number(id)) : [];
+            // Support existing string[] format and convert to number[]
+            return Array.isArray(parsed) ? parsed.map((id) => Number(id)) : [];
         } catch {
             return [];
         }
@@ -148,62 +154,71 @@ export class FavouriteService {
         const favouriteIds = this.getFavouriteIdsFromLocalStorage();
         if (!favouriteIds.includes(vocabularyId)) {
             favouriteIds.push(vocabularyId);
-            // ✅ 保存為 string[] 格式,與您現有的一致
-            localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(favouriteIds.map(String)));
+            // Save as string[] for backward compatibility
+            localStorage.setItem(
+                LOCALSTORAGE_KEY,
+                JSON.stringify(favouriteIds.map(String)),
+            );
         }
     }
 
     private removeFavouriteFromLocalStorage(vocabularyId: number): void {
         const favouriteIds = this.getFavouriteIdsFromLocalStorage();
-        const updated = favouriteIds.filter(id => id !== vocabularyId);
-        // ✅ 保存為 string[] 格式
+        const updated = favouriteIds.filter((id) => id !== vocabularyId);
+        // Save as string[]
         localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(updated.map(String)));
     }
-    //for future
-    // ==================== 登入時同步 localStorage 到資料庫 ====================
-    /*async syncLocalStorageToDatabase(): Promise<void> {
+
+    /*
+    // ==================== Sync localStorage to DB on login (for future use) ====================
+    async syncLocalStorageToDatabase(): Promise<void> {
         const user = auth.currentUser;
         if (!user) return;
 
         const localFavouriteIds = this.getFavouriteIdsFromLocalStorage();
-        console.log('🔄 ocalStorage 長度:', localFavouriteIds.length);
+        console.log('🔄 localStorage favourite count:', localFavouriteIds.length);
         if (localFavouriteIds.length === 0) return;
-        console.log('🔄 ocalStorage 長度:', localFavouriteIds.length);
+
         try {
             const idToken = await user.getIdToken();
             const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}/sync`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${idToken}`,
-                    'Content-Type': 'application/json'
+                    Authorization: `Bearer ${idToken}`,
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ vocabularyIds: localFavouriteIds })
+                body: JSON.stringify({ vocabularyIds: localFavouriteIds }),
             });
 
             if (response.ok) {
                 localStorage.removeItem(LOCALSTORAGE_KEY);
-                console.log('✅ localStorage 已同步到資料庫');
+                console.log('✅ localStorage favourites synced to database');
             }
         } catch (error) {
-            console.error('❌ 同步失敗:', error);
+            console.error('❌ Failed to sync favourites:', error);
         }
-    }*/
-    //for future enhancement
-    // ==================== 檢查是否為收藏 ====================
-    /*async isFavourite(vocabularyId: number): Promise<boolean> {
+    }
+    */
+
+    /*
+    // ==================== Check if a single vocabulary is favourite (for future enhancement) ====================
+    async isFavourite(vocabularyId: number): Promise<boolean> {
         if (FavouriteService.isUserLoggedIn()) {
             try {
                 const user = auth.currentUser;
                 if (!user) return false;
 
                 const idToken = await user.getIdToken();
-                const response = await fetch(`${API_ENDPOINTS.FAVOURITES}/${user.uid}/check/${vocabularyId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${idToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await fetch(
+                    `${API_ENDPOINTS.FAVOURITES}/${user.uid}/check/${vocabularyId}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${idToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                    },
+                );
 
                 if (response.ok) {
                     const data = await response.json();
@@ -217,11 +232,12 @@ export class FavouriteService {
             const favouriteIds = this.getFavouriteIdsFromLocalStorage();
             return favouriteIds.includes(vocabularyId);
         }
-    }*/
+    }
+    */
 
-    // ==================== 清理 ====================
+    // ==================== Cleanup ====================
     cleanup(): void {
-        this.pendingOperations.forEach(timeout => clearTimeout(timeout));
+        this.pendingOperations.forEach((timeout) => clearTimeout(timeout));
         this.pendingOperations.clear();
     }
 }

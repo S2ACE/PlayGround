@@ -14,7 +14,7 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
 				boxSizing: 'border-box',
 			}}
 		>
-			<Toolbar /> {/* 這裡推開內容 */}
+			<Toolbar />
 			{children}
 		</Box>
 	);

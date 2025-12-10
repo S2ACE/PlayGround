@@ -14,7 +14,7 @@ const KanaToggle = ({ kanaType, setKanaType }: KanaToggleProps): JSX.Element => 
             sx={{
                 display: 'flex',
                 justifyContent: 'center',
-                backgroundColor: '#ff9800',
+                backgroundColor: 'primary.light',
                 borderRadius: '8px 8px 0 0',
                 overflow: 'hidden',
                 '.MuiToggleButton-root': {
@@ -25,7 +25,7 @@ const KanaToggle = ({ kanaType, setKanaType }: KanaToggleProps): JSX.Element => 
                     fontWeight: 'bold',
                     textTransform: 'none',
                     padding: '12px 16px',
-                    backgroundColor: '#ff9800',
+                    backgroundColor: 'primary.light',
                 '&.Mui-selected, &.Mui-selected:hover': {
                     backgroundColor: '#ffb74d',
                     color: '#000000',

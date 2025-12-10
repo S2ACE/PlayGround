@@ -23,16 +23,16 @@ const TestResults = (): JSX.Element => {
     });
     const [isLoading, setIsLoading] = useState(true);
 
-    // ✅ 使用 VocabularyProgressService 載入進度
+    // Load vocabulary progress via VocabularyProgressService
     useEffect(() => {
         const loadProgress = async () => {
             try {
                 setIsLoading(true);
                 
-                // ✅ 從 Service 讀取 (自動判斷 localStorage 或 database)
+                // Read from service (auto‑decides between localStorage and database)
                 const savedProgress = await vocabularyProgressService.getProgress();
                 
-                // ✅ 轉換為 VocabularyProgress 格式並計算 currentProficiency
+                // Convert to VocabularyProgress format and derive currentProficiency
                 const progress: VocabularyProgress[] = savedProgress.map(p => ({
                     vocabularyId: String(p.vocabularyId),
                     masteredCount: p.masteredCount,
@@ -40,7 +40,7 @@ const TestResults = (): JSX.Element => {
                     lastTestDate: p.lastTestDate
                 }));
 
-                // ✅ 統計各個等級的數量
+                // Aggregate counts for each proficiency level
                 const masteredCount = progress.filter(p => p.currentProficiency === 'mastered').length;
                 const somewhatCount = progress.filter(p => p.currentProficiency === 'somewhat_familiar').length;
                 const notFamiliarCount = progress.filter(p => p.currentProficiency === 'not_familiar').length;
@@ -84,7 +84,6 @@ const TestResults = (): JSX.Element => {
         }
     };
 
-    // ✅ 載入中顯示
     if (isLoading) {
         return <LoadingSpinner message='Loading' />;
     }

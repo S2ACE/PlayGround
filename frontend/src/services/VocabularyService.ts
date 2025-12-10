@@ -12,24 +12,19 @@ export type Vocabulary = {
 }
 
 export class VocabularyService {
-    
-    /**
-     * 取得所有單字
-     */
+    /* Fetch all vocabulary records for a given language. */
     async getAllVocabulary(lang: string): Promise<Vocabulary[]> {
         const res = await fetch(`${API_ENDPOINTS.VOCABULARY}/${lang}`);
         if (!res.ok) {
-            throw new Error("API error");
+            throw new Error('API error');
         }
         return await res.json();
     }
 
-    /**
-     * 依等級和字母過濾單字
-     */
+    /* Filter vocabulary by level and starting letter. */
     filterWordsByLevelAndLetter(
-        words: Vocabulary[], 
-        level: string, 
+        words: Vocabulary[],
+        level: string,
         letter: string
     ): Vocabulary[] {
         return words.filter(
@@ -39,9 +34,7 @@ export class VocabularyService {
         );
     }
 
-    /**
-     * 取得特定等級的所有開頭字母
-     */
+    /* Get all distinct first letters for a specific level. */
     getLettersForLevel(words: Vocabulary[], level: string): string[] {
         const letters = new Set<string>();
         words
@@ -52,9 +45,7 @@ export class VocabularyService {
         return Array.from(letters).sort();
     }
 
-    /**
-     * 取得所有等級
-     */
+    /* Get all distinct levels from the vocabulary list. */
     getAllLevels(words: Vocabulary[]): string[] {
         const levels = new Set<string>();
         words.forEach((word) => levels.add(word.level));
@@ -62,5 +53,4 @@ export class VocabularyService {
     }
 }
 
-// 導出單例實例
 export const vocabularyService = new VocabularyService();

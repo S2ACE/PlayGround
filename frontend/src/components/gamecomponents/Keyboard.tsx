@@ -2,12 +2,12 @@ import type { JSX } from 'react';
 import { styled } from "@mui/material/styles";
 import { Box, Button } from "@mui/material";
 
-type KeyboardProps = {
-    guessedLetters: string[];
-    currentVocabularty: string;
-    isGameOver: boolean;
-    addGuessedLetter: (letter:string) => void;
-};
+interface KeyboardProps {
+	guessedLetters: string[];
+	currentVocabularty: string;
+	isGameOver: boolean;
+	addGuessedLetter: (letter: string) => void;
+}
 
 const Keyboard = ({ guessedLetters,currentVocabularty,isGameOver,addGuessedLetter }: KeyboardProps): JSX.Element => {
     const row1 = 'qwertyuiop'.split('');
@@ -89,7 +89,7 @@ const Keyboard = ({ guessedLetters,currentVocabularty,isGameOver,addGuessedLette
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: { xs: 0.25, sm: 0.5 },   // 手機行距更小
+            gap: { xs: 0.25, sm: 0.5 },
             width: '100%',
             maxWidth: 480,
             p: { sm: 1 },

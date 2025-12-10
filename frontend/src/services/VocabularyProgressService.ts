@@ -25,65 +25,65 @@ export interface BatchUpdateResponse {
     message: string;
 }
 
-// ==================== Helper Functions ====================
-
-/**
- * 根據 masteredCount 計算熟練度
- */
+/* Derive current proficiency level from masteredCount. */
 export function getCurrentProficiency(masteredCount: number): ProficiencyLevel {
     if (masteredCount >= 3) return 'mastered';
     if (masteredCount >= 1) return 'somewhat_familiar';
     return 'not_familiar';
 }
 
-/**
- * 根據答案計算增量
- */
+/* Get increment value for masteredCount based on answer. */
 export function getProficiencyIncrement(proficiency: ProficiencyLevel): number {
     switch (proficiency) {
-        case 'mastered': return 1;
-        case 'somewhat_familiar': return 1;
-        case 'not_familiar': return 0;
-        default: return 0;
+        case 'mastered':
+            return 1;
+        case 'somewhat_familiar':
+            return 1;
+        case 'not_familiar':
+            return 0;
+        default:
+            return 0;
     }
 }
 
-/**
- * 取得熟練度的顯示文字
- */
+/* Get localized label for proficiency level. */
 export function getProficiencyLabel(proficiency: ProficiencyLevel): string {
     switch (proficiency) {
-        case 'mastered': return '已熟記';
-        case 'somewhat_familiar': return '有點熟';
-        case 'not_familiar': return '不熟悉';
+        case 'mastered':
+            return '已熟記';
+        case 'somewhat_familiar':
+            return '有點熟';
+        case 'not_familiar':
+            return '不熟悉';
     }
 }
 
-/**
- * 取得熟練度的顏色
- */
-export function getProficiencyColor(proficiency: ProficiencyLevel): 'success' | 'warning' | 'error' {
+/* Get MUI color name for a given proficiency level. */
+export function getProficiencyColor(
+    proficiency: ProficiencyLevel,
+): 'success' | 'warning' | 'error' {
     switch (proficiency) {
-        case 'mastered': return 'success';
-        case 'somewhat_familiar': return 'warning';
-        case 'not_familiar': return 'error';
+        case 'mastered':
+            return 'success';
+        case 'somewhat_familiar':
+            return 'warning';
+        case 'not_familiar':
+            return 'error';
     }
 }
 
 // ==================== Service Class ====================
 
 /**
- * 單字學習進度服務
- * - 未登入: 使用 localStorage
- * - 已登入: 使用 Database
+ * Vocabulary learning progress service
+ * - Guest (not logged in): store in localStorage
+ * - Member (logged in): store in backend database
  */
 export class VocabularyProgressService {
-    /**
-     * 取得進度 (自動判斷來源)
-     */
+    /* Get all progress entries (auto-detects source). */
     async getProgress(): Promise<VocabularyProgressData[]> {
         const user = auth.currentUser;
-        
+
         if (user) {
             return await this.getProgressFromDatabase();
         } else {
@@ -91,12 +91,10 @@ export class VocabularyProgressService {
         }
     }
 
-    /**
-     * 更新進度 (自動判斷目標)
-     */
+    /* Update a single progress record (auto-selects target). */
     async updateProgress(progress: VocabularyProgressData): Promise<void> {
         const user = auth.currentUser;
-        
+
         if (user) {
             await this.updateProgressToDatabase(progress);
         } else {
@@ -104,36 +102,32 @@ export class VocabularyProgressService {
         }
     }
 
-    /**
-     * 取得單個單字進度
-     */
+    /* Get progress for a single vocabulary item. */
     async getVocabularyProgress(vocabularyId: number): Promise<VocabularyProgressData | null> {
         const allProgress = await this.getProgress();
-        return allProgress.find(p => p.vocabularyId === vocabularyId) || null;
+        return allProgress.find((p) => p.vocabularyId === vocabularyId) || null;
     }
 
-    /**
-     * 取得單字的熟練度
-     */
+    /* Get current proficiency for a single vocabulary item. */
     async getWordProficiency(vocabularyId: number): Promise<ProficiencyLevel> {
         const progress = await this.getVocabularyProgress(vocabularyId);
         return progress ? getCurrentProficiency(progress.masteredCount) : 'not_familiar';
     }
 
-    // ==================== Database 操作 (會員模式) ====================
+    // ==================== Database operations (member mode) ====================
 
     private async getProgressFromDatabase(): Promise<VocabularyProgressData[]> {
         try {
             const user = auth.currentUser;
-            if (!user) throw new Error('用戶未登入');
+            if (!user) throw new Error('User not signed in');
 
             const idToken = await user.getIdToken();
             const response = await fetch(`${API_ENDPOINTS.PROGRESS}/${user.uid}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${idToken}`,
-                    'Content-Type': 'application/json'
-                }
+                    Authorization: `Bearer ${idToken}`,
+                    'Content-Type': 'application/json',
+                },
             });
 
             if (!response.ok) {
@@ -141,10 +135,10 @@ export class VocabularyProgressService {
             }
 
             const data: VocabularyProgressListResponse = await response.json();
-            console.log('✅ 從 Database 載入進度:', data.totalCount, '個');
+            console.log('✅ Loaded progress from database:', data.totalCount, 'items');
             return data.progress || [];
         } catch (error) {
-            console.error('❌ Database 讀取失敗:', error);
+            console.error('❌ Failed to load progress from database:', error);
             return [];
         }
     }
@@ -152,43 +146,43 @@ export class VocabularyProgressService {
     private async updateProgressToDatabase(progress: VocabularyProgressData): Promise<void> {
         try {
             const user = auth.currentUser;
-            if (!user) throw new Error('用戶未登入');
+            if (!user) throw new Error('User not signed in');
 
             const idToken = await user.getIdToken();
             const response = await fetch(`${API_ENDPOINTS.PROGRESS}/${user.uid}`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${idToken}`,
-                    'Content-Type': 'application/json'
+                    Authorization: `Bearer ${idToken}`,
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(progress)
+                body: JSON.stringify(progress),
             });
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            console.log('✅ Database 已更新:', progress.vocabularyId);
+            console.log('✅ Database progress updated:', progress.vocabularyId);
         } catch (error) {
-            console.error('❌ Database 更新失敗:', error);
-            // 降級:失敗時寫入 localStorage
+            console.error('❌ Failed to update database progress:', error);
+            // Fallback: save to localStorage when DB write fails
             this.updateProgressToLocalStorage(progress);
         }
     }
 
-    // ==================== localStorage 操作 (訪客模式) ====================
+    // ==================== localStorage operations (guest mode) ====================
 
     private getProgressFromLocalStorage(): VocabularyProgressData[] {
         try {
             const data = localStorage.getItem(LOCALSTORAGE_KEY);
             if (data) {
                 const parsed = JSON.parse(data);
-                console.log('✅ 從 localStorage 載入進度:', parsed.length, '個');
+                console.log('✅ Loaded progress from localStorage:', parsed.length, 'items');
                 return parsed;
             }
             return [];
         } catch (error) {
-            console.error('❌ localStorage 讀取失敗:', error);
+            console.error('❌ Failed to read localStorage progress:', error);
             return [];
         }
     }
@@ -196,12 +190,12 @@ export class VocabularyProgressService {
     private updateProgressToLocalStorage(progress: VocabularyProgressData): void {
         try {
             const allProgress = this.getProgressFromLocalStorage();
-            const index = allProgress.findIndex(p => p.vocabularyId === progress.vocabularyId);
+            const index = allProgress.findIndex((p) => p.vocabularyId === progress.vocabularyId);
 
-            // ✅ 計算 currentProficiency
+            // Always compute currentProficiency when storing locally
             const progressWithProficiency: VocabularyProgressData = {
                 ...progress,
-                currentProficiency: getCurrentProficiency(progress.masteredCount)
+                currentProficiency: getCurrentProficiency(progress.masteredCount),
             };
 
             if (index >= 0) {
@@ -211,22 +205,20 @@ export class VocabularyProgressService {
             }
 
             localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(allProgress));
-            console.log('✅ localStorage 已保存:', progress.vocabularyId);
+            console.log('✅ Saved progress to localStorage:', progress.vocabularyId);
         } catch (error) {
-            console.error('❌ localStorage 寫入失敗:', error);
+            console.error('❌ Failed to write progress to localStorage:', error);
         }
     }
 
-    // ==================== 批量操作 ====================
+    // ==================== Batch operations ====================
 
-    /**
-     * 批量更新進度
-     */
+    /* Batch update progress list (planned for future enhancement).
     /* for future enhancement */
     /*
     async batchUpdateProgress(progressList: VocabularyProgressData[]): Promise<BatchUpdateResponse | null> {
         const user = auth.currentUser;
-        
+
         if (user) {
             try {
                 const idToken = await user.getIdToken();
@@ -241,33 +233,34 @@ export class VocabularyProgressService {
 
                 if (response.ok) {
                     const result: BatchUpdateResponse = await response.json();
-                    console.log('✅ 批量更新完成:', result.message);
+                    console.log('✅ Batch update completed:', result.message);
                     return result;
                 }
             } catch (error) {
-                console.error('❌ 批量更新失敗:', error);
+                console.error('❌ Batch update failed:', error);
             }
         } else {
-            // 未登入:逐個寫入 localStorage
+            // Guest mode: write each entry to localStorage
             progressList.forEach(progress => this.updateProgressToLocalStorage(progress));
         }
-        
-        return null;
-    }*/
 
-    // ==================== 清除資料 ====================
+        return null;
+    }
+    */
+
+    // ==================== Clearing data ====================
 
     /**
-     * 清除訪客進度
+     * Clear all guest progress stored in localStorage.
      */
     clearGuestProgress(): void {
         localStorage.removeItem(LOCALSTORAGE_KEY);
-        console.log('✅ 訪客進度已清除');
+        console.log('✅ Guest progress cleared');
     }
 
     /* for future enhancement */
     /**
-     * 清除會員進度
+     * Clear all member progress stored in backend.
      */
     /*
     async clearMemberProgress(): Promise<void> {
@@ -283,16 +276,17 @@ export class VocabularyProgressService {
                     'Content-Type': 'application/json'
                 }
             });
-            console.log('✅ 會員進度已清除');
+            console.log('✅ Member progress cleared');
         } catch (error) {
-            console.error('❌ 清除會員進度失敗:', error);
+            console.error('❌ Failed to clear member progress:', error);
         }
     }
     */
-    // ==================== 統計資料 ====================
+
+    // ==================== Stats helpers ====================
 
     /**
-     * 取得進度統計
+     * Compute overall progress statistics for the current user/guest.
      */
     async getProgressStats(): Promise<{
         total: number;
@@ -301,15 +295,15 @@ export class VocabularyProgressService {
         notFamiliar: number;
     }> {
         const allProgress = await this.getProgress();
-        
+
         const stats = {
             total: allProgress.length,
             mastered: 0,
             somewhatFamiliar: 0,
-            notFamiliar: 0
+            notFamiliar: 0,
         };
 
-        allProgress.forEach(progress => {
+        allProgress.forEach((progress) => {
             const proficiency = getCurrentProficiency(progress.masteredCount);
             switch (proficiency) {
                 case 'mastered':

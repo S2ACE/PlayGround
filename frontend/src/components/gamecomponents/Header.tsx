@@ -3,11 +3,10 @@ import { Box, Typography }  from '@mui/material';
 import LifeBar from './LifeBar';
 import type { LifeBarProps } from './LifeBar';
 
-
-type HeaderProps = LifeBarProps & {
-    showConfetti?: boolean;
-    onToggleConfetti?: () => void;
-    confettiUrl?: string;
+interface HeaderProps extends LifeBarProps {
+	showConfetti?: boolean;
+	onToggleConfetti?: () => void;
+	confettiUrl?: string;
 }
 
 const Header = ({ maxLives, livesLeft, showConfetti, onToggleConfetti, confettiUrl }: HeaderProps): JSX.Element => {
