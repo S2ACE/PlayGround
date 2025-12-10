@@ -3,6 +3,9 @@ using VocabularyAPI.Models;
 
 namespace VocabularyAPI.DbContexts
 {
+    /// <summary>
+    /// Entity Framework Core database context for vocabulary, members, favourites and progress tracking.
+    /// </summary>
     public class VocabularyContext : DbContext
     {
         public DbSet<Vocabulary> Vocabulary { get; set; }
@@ -15,9 +18,8 @@ namespace VocabularyAPI.DbContexts
 
         public DbSet<VocabularyProgress> VocabularyProgress { get; set; }
 
-        public VocabularyContext(DbContextOptions<VocabularyContext> options) : base(options) 
+        public VocabularyContext(DbContextOptions<VocabularyContext> options) : base(options)
         {
-
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -37,30 +39,33 @@ namespace VocabularyAPI.DbContexts
         {
             base.OnModelCreating(modelBuilder);
 
-            // ✅ 配置 MemberProvider 實體
+            // Configure MemberProviders entity (composite key and relationships).
             modelBuilder.Entity<MemberProviders>(entity =>
             {
-                // 複合主鍵
+                // Composite primary key.
                 entity.HasKey(e => new { e.MemberId, e.Provider });
 
-                // 外鍵關係
-                entity.HasOne(d => d.Member) // MemberProvider 有一個 Member
-                      .WithMany(p => p.Providers) // Member 有多個 MemberProvider
-                      .HasForeignKey(d => d.MemberId)  // 注意：這裡是 Id，不是 MemberId 透過 Id 欄位關聯
+                // Relationship: MemberProviders → Members (many-to-one).
+                entity.HasOne(d => d.Member)
+                      .WithMany(p => p.Providers)
+                      .HasForeignKey(d => d.MemberId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            /*可以從 Member (主實體) 配置關係
+            /*
+            // Alternative configuration from Members (principal entity).
             modelBuilder.Entity<Members>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasMany(p => p.Providers)     // Members 有多個 MemberProvider
-                      .WithOne(d => d.Member)        // MemberProvider 有一個 Member
-                      .HasForeignKey(d => d.Id)      // 外鍵是 MemberProvider.Id
+                entity.HasMany(p => p.Providers)
+                      .WithOne(d => d.Member)
+                      .HasForeignKey(d => d.Id)
                       .OnDelete(DeleteBehavior.Cascade);
             });
             */
+
+            // Configure FavouriteVocabulary join entity.
             modelBuilder.Entity<FavouriteVocabulary>(entity =>
             {
                 entity.HasKey(e => new { e.MemberId, e.VocabularyId });
@@ -74,28 +79,25 @@ namespace VocabularyAPI.DbContexts
                     .WithMany(v => v.FavouritedBy)
                     .HasForeignKey(f => f.VocabularyId)
                     .OnDelete(DeleteBehavior.Cascade);
-
             });
 
+            // Configure VocabularyProgress entity.
             modelBuilder.Entity<VocabularyProgress>(entity =>
             {
                 entity.HasKey(e => new { e.MemberId, e.VocabularyId });
 
-                // 與 Members 的關係
+                // Relationship with Members.
                 entity.HasOne(vp => vp.Member)
                     .WithMany(m => m.VocabularyProgress)
                     .HasForeignKey(vp => vp.MemberId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                // 與 Vocabulary 的關係
+                // Relationship with Vocabulary.
                 entity.HasOne(vp => vp.Vocabulary)
                     .WithMany(v => v.ProgressRecords)
                     .HasForeignKey(vp => vp.VocabularyId)
                     .OnDelete(DeleteBehavior.Cascade);
-
             });
-
-
         }
     }
 }

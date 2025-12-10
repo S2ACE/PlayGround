@@ -19,7 +19,7 @@ namespace VocabularyAPI.Services
         }
 
         /// <summary>
-        /// 取得用戶的所有學習進度
+        /// Get all learning progress records for a member.
         /// </summary>
         public async Task<VocabularyProgressListResponseDto> GetProgressByMemberIdAsync(string memberId)
         {
@@ -34,7 +34,8 @@ namespace VocabularyAPI.Services
                 })
                 .ToListAsync();
 
-            _logger.LogInformation("取得學習進度: MemberId={MemberId}, Count={Count}",
+            _logger.LogInformation(
+                "Loaded vocabulary progress: MemberId={MemberId}, Count={Count}",
                 memberId, progressList.Count);
 
             return new VocabularyProgressListResponseDto
@@ -45,16 +46,16 @@ namespace VocabularyAPI.Services
         }
 
         /// <summary>
-        /// 更新或新增單個進度
+        /// Create or update a single progress record.
         /// </summary>
         public async Task<bool> UpsertProgressAsync(string memberId, UpdateProgressRequestDto request)
         {
-            // 檢查詞彙是否存在
+            // Validate that the vocabulary item exists.
             var vocabularyExists = await _context.Vocabulary.AnyAsync(v => v.Id == request.VocabularyId);
             if (!vocabularyExists)
             {
-                _logger.LogWarning("詞彙不存在: VocabularyId={VocabularyId}", request.VocabularyId);
-                throw new ArgumentException($"詞彙 ID {request.VocabularyId} 不存在");
+                _logger.LogWarning("Vocabulary does not exist: VocabularyId={VocabularyId}", request.VocabularyId);
+                throw new ArgumentException($"Vocabulary ID {request.VocabularyId} does not exist.");
             }
 
             var existing = await _context.VocabularyProgress
@@ -62,16 +63,17 @@ namespace VocabularyAPI.Services
 
             if (existing != null)
             {
-                // 更新現有記錄
+                // Update existing record.
                 existing.MasteredCount = request.MasteredCount;
                 existing.LastTestDate = request.LastTestDate;
 
-                _logger.LogDebug("更新進度: MemberId={MemberId}, VocabId={VocabId}, Count={Count}",
+                _logger.LogDebug(
+                    "Updated progress: MemberId={MemberId}, VocabId={VocabId}, Count={Count}",
                     memberId, request.VocabularyId, request.MasteredCount);
             }
             else
             {
-                // 新增記錄
+                // Insert new record.
                 var newProgress = new VocabularyProgress
                 {
                     MemberId = memberId,
@@ -83,7 +85,8 @@ namespace VocabularyAPI.Services
 
                 _context.VocabularyProgress.Add(newProgress);
 
-                _logger.LogDebug("新增進度: MemberId={MemberId}, VocabId={VocabId}",
+                _logger.LogDebug(
+                    "Inserted new progress: MemberId={MemberId}, VocabId={VocabId}",
                     memberId, request.VocabularyId);
             }
 
@@ -92,7 +95,7 @@ namespace VocabularyAPI.Services
         }
 
         /// <summary>
-        /// 批量更新進度
+        /// Batch update learning progress records.
         /// </summary>
         public async Task<BatchUpdateProgressResponseDto> BatchUpdateProgressAsync(
             string memberId,
@@ -136,7 +139,7 @@ namespace VocabularyAPI.Services
                 {
                     failedCount++;
                     response.Errors.Add($"VocabId {progress.VocabularyId}: {ex.Message}");
-                    _logger.LogError(ex, "批量更新失敗: VocabId={VocabId}", progress.VocabularyId);
+                    _logger.LogError(ex, "Batch update failed: VocabId={VocabId}", progress.VocabularyId);
                 }
             }
 
@@ -145,14 +148,15 @@ namespace VocabularyAPI.Services
             response.UpdatedCount = updatedCount;
             response.NewCount = newCount;
             response.FailedCount = failedCount;
-            response.Message = $"批量更新完成: 更新 {updatedCount} 個, 新增 {newCount} 個, 失敗 {failedCount} 個";
+            response.Message =
+                $"Batch update completed: updated {updatedCount}, inserted {newCount}, failed {failedCount}.";
 
-            _logger.LogInformation("批量更新完成: {Message}", response.Message);
+            _logger.LogInformation("Batch update completed: {Message}", response.Message);
             return response;
         }
 
         /// <summary>
-        /// 刪除所有進度
+        /// Delete all learning progress records for a member.
         /// </summary>
         public async Task<int> DeleteAllProgressAsync(string memberId)
         {
@@ -163,7 +167,8 @@ namespace VocabularyAPI.Services
             _context.VocabularyProgress.RemoveRange(progressList);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("清空學習進度: MemberId={MemberId}, Count={Count}",
+            _logger.LogInformation(
+                "Cleared learning progress: MemberId={MemberId}, Count={Count}",
                 memberId, progressList.Count);
 
             return progressList.Count;

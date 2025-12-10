@@ -6,7 +6,7 @@ using VocabularyAPI.Services;
 namespace VocabularyAPI.Controllers
 {
     /// <summary>
-    /// Member API
+    /// Member API.
     /// </summary>
     [ApiController]
     [Route("api/members")]
@@ -22,10 +22,10 @@ namespace VocabularyAPI.Controllers
         }
 
         /// <summary>
-        /// 根據 ID 取得會員資料
+        /// Get member profile by ID (current authenticated user only).
         /// </summary>
-        /// <param name="id">會員 ID</param>
-        /// <returns>會員資料</returns>
+        /// <param name="id">Member ID.</param>
+        /// <returns>Member profile.</returns>
         [HttpGet("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MembersDto))]
@@ -43,7 +43,7 @@ namespace VocabularyAPI.Controllers
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != id)
             {
-                _logger.LogWarning("未授權存取會員資料: UserId={UserId}, RequestedId={Id}", userId, id);
+                _logger.LogWarning("Unauthorized access to member data: UserId={UserId}, RequestedId={Id}", userId, id);
                 return Forbid();
             }
 
@@ -53,23 +53,23 @@ namespace VocabularyAPI.Controllers
 
                 if (member == null)
                 {
-                    return NotFound($"找不到 ID 為 '{id}' 的會員");
+                    return NotFound($"Member with ID '{id}' was not found.");
                 }
 
                 return Ok(member);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "取得會員資料時發生錯誤，ID: {Id}", id);
-                return StatusCode(500, "服務器內部錯誤");
+                _logger.LogError(ex, "Error while getting member data, ID: {Id}", id);
+                return StatusCode(500, "Internal server error.");
             }
         }
 
         /// <summary>
-        /// 根據 Email 取得會員資料
+        /// Get member profile by email.
         /// </summary>
-        /// <param name="email">會員 Email</param>
-        /// <returns>會員資料</returns>
+        /// <param name="email">Member email.</param>
+        /// <returns>Member profile.</returns>
         [HttpGet("by-email/{email}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MembersDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -88,24 +88,24 @@ namespace VocabularyAPI.Controllers
 
                 if (member == null)
                 {
-                    return NotFound($"找不到 Email 為 '{email}' 的會員");
+                    return NotFound($"Member with email '{email}' was not found.");
                 }
 
                 return Ok(member);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "取得會員資料時發生錯誤，Email: {Email}", email);
-                return StatusCode(500, "服務器內部錯誤");
+                _logger.LogError(ex, "Error while getting member data, Email: {Email}", email);
+                return StatusCode(500, "Internal server error.");
             }
         }
 
         /// <summary>
-        /// 更新會員資料
+        /// Update member profile (current authenticated user only).
         /// </summary>
-        /// <param name="id">會員 ID</param>
-        /// <param name="request">更新請求</param>
-        /// <returns>更新後的會員資料</returns>
+        /// <param name="id">Member ID.</param>
+        /// <param name="request">Update request payload.</param>
+        /// <returns>Updated member profile.</returns>
         [HttpPut("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MembersDto))]
@@ -123,7 +123,7 @@ namespace VocabularyAPI.Controllers
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != id)
             {
-                _logger.LogWarning("未授權更新會員資料: UserId={UserId}, RequestedId={Id}", userId, id);
+                _logger.LogWarning("Unauthorized member update: UserId={UserId}, RequestedId={Id}", userId, id);
                 return Forbid();
             }
 
@@ -138,15 +138,15 @@ namespace VocabularyAPI.Controllers
 
                 if (updatedMember == null)
                 {
-                    return NotFound($"找不到 ID 為 '{id}' 的會員");
+                    return NotFound($"Member with ID '{id}' was not found.");
                 }
 
                 return Ok(updatedMember);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "更新會員資料時發生錯誤，ID: {Id}", id);
-                return StatusCode(500, "服務器內部錯誤");
+                _logger.LogError(ex, "Error while updating member data, ID: {Id}", id);
+                return StatusCode(500, "Internal server error.");
             }
         }
     }

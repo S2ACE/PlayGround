@@ -6,7 +6,7 @@ using VocabularyAPI.Services;
 namespace VocabularyAPI.Controllers
 {
     /// <summary>
-    /// 處理favourite vocabulary API
+    /// Handle favourite vocabulary APIs.
     /// </summary>
     [ApiController]
     [Route("api/favourites")]
@@ -25,7 +25,7 @@ namespace VocabularyAPI.Controllers
         }
 
         /// <summary>
-        /// 取得會員的收藏 ID 列表
+        /// Get all favourite vocabulary IDs for a member.
         /// GET /api/favourites/{memberId}
         /// </summary>
         [HttpGet("{memberId}")]
@@ -37,13 +37,13 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != memberId)
             {
-                _logger.LogWarning("未授權存取: UserId={UserId}, MemberId={MemberId}", userId, memberId);
+                _logger.LogWarning("Unauthorized access: UserId={UserId}, MemberId={MemberId}", userId, memberId);
                 return Forbid();
             }
 
@@ -54,13 +54,13 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "取得收藏列表失敗: MemberId={MemberId}", memberId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                _logger.LogError(ex, "Failed to get favourites: MemberId={MemberId}", memberId);
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
 
         /// <summary>
-        /// 新增收藏
+        /// Add a new favourite vocabulary for a member.
         /// POST /api/favourites/{memberId}
         /// </summary>
         [HttpPost("{memberId}")]
@@ -73,13 +73,13 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != memberId)
             {
-                _logger.LogWarning("未授權存取: UserId={UserId}, MemberId={MemberId}", userId, memberId);
+                _logger.LogWarning("Unauthorized access: UserId={UserId}, MemberId={MemberId}", userId, memberId);
                 return Forbid();
             }
 
@@ -94,10 +94,10 @@ namespace VocabularyAPI.Controllers
 
                 if (!success)
                 {
-                    return Conflict(new { message = "詞彙已在收藏列表中", vocabularyId = request.VocabularyId });
+                    return Conflict(new { message = "Vocabulary is already in favourites.", vocabularyId = request.VocabularyId });
                 }
 
-                return Ok(new { message = "新增收藏成功", vocabularyId = request.VocabularyId });
+                return Ok(new { message = "Favourite added successfully.", vocabularyId = request.VocabularyId });
             }
             catch (ArgumentException ex)
             {
@@ -105,14 +105,14 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "新增收藏失敗: MemberId={MemberId}, VocabId={VocabId}",
+                _logger.LogError(ex, "Failed to add favourite: MemberId={MemberId}, VocabId={VocabId}",
                     memberId, request.VocabularyId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
 
         /// <summary>
-        /// 移除收藏
+        /// Remove a favourite vocabulary for a member.
         /// DELETE /api/favourites/{memberId}/{vocabularyId}
         /// </summary>
         [HttpDelete("{memberId}/{vocabularyId}")]
@@ -125,13 +125,13 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != memberId)
             {
-                _logger.LogWarning("未授權存取: UserId={UserId}, MemberId={MemberId}", userId, memberId);
+                _logger.LogWarning("Unauthorized access: UserId={UserId}, MemberId={MemberId}", userId, memberId);
                 return Forbid();
             }
 
@@ -141,25 +141,26 @@ namespace VocabularyAPI.Controllers
 
                 if (!success)
                 {
-                    return NotFound(new { message = "收藏不存在", vocabularyId });
+                    return NotFound(new { message = "Favourite not found.", vocabularyId });
                 }
 
-                return Ok(new { message = "移除收藏成功", vocabularyId });
+                return Ok(new { message = "Favourite removed successfully.", vocabularyId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "移除收藏失敗: MemberId={MemberId}, VocabId={VocabId}",
+                _logger.LogError(ex, "Failed to remove favourite: MemberId={MemberId}, VocabId={VocabId}",
                     memberId, vocabularyId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
 
-        //for future enhancement sync function
+        // for future enhancement: sync favourites
         /// <summary>
-        /// 批量同步收藏 (登入時使用)
+        /// Sync favourites in bulk when user signs in.
         /// POST /api/favourites/{memberId}/sync
         /// </summary>
-        /*[HttpPost("{memberId}/sync")]
+        /*
+        [HttpPost("{memberId}/sync")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BulkFavouritesResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -168,12 +169,12 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             if (!ModelState.IsValid || request.VocabularyIds == null || !request.VocabularyIds.Any())
             {
-                return BadRequest(new { message = "Vocabulary IDs 不能為空" });
+                return BadRequest(new { message = "Vocabulary IDs cannot be empty." });
             }
 
             try
@@ -183,17 +184,19 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "同步收藏失敗: MemberId={MemberId}", memberId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                _logger.LogError(ex, "Failed to sync favourites: MemberId={MemberId}", memberId);
+                return StatusCode(500, new { message = "Internal server error." });
             }
-        }*/
+        }
+        */
 
-        //for future enhancement
+        // for future enhancement: bulk delete
         /// <summary>
-        /// 批量刪除收藏
+        /// Delete multiple favourites in a single request.
         /// POST /api/favourites/{memberId}/bulk-delete
         /// </summary>
-        /*[HttpPost("{memberId}/bulk-delete")]
+        /*
+        [HttpPost("{memberId}/bulk-delete")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BulkFavouritesResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -204,12 +207,12 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             if (!ModelState.IsValid || request.VocabularyIds == null || !request.VocabularyIds.Any())
             {
-                return BadRequest(new { message = "Vocabulary IDs 不能為空" });
+                return BadRequest(new { message = "Vocabulary IDs cannot be empty." });
             }
 
             try
@@ -219,17 +222,19 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "批量刪除收藏失敗: MemberId={MemberId}", memberId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                _logger.LogError(ex, "Failed to bulk delete favourites: MemberId={MemberId}", memberId);
+                return StatusCode(500, new { message = "Internal server error." });
             }
-        }*/
+        }
+        */
 
-        //for future enhancement
+        // for future enhancement: delete all
         /// <summary>
-        /// 清空所有收藏
+        /// Delete all favourites for a member.
         /// DELETE /api/favourites/{memberId}/all
         /// </summary>
-        /*[HttpDelete("{memberId}/all")]
+        /*
+        [HttpDelete("{memberId}/all")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -238,7 +243,7 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             try
@@ -246,23 +251,25 @@ namespace VocabularyAPI.Controllers
                 var deletedCount = await _service.DeleteAllFavouritesAsync(memberId);
                 return Ok(new
                 {
-                    message = $"已清空收藏列表,共刪除 {deletedCount} 個",
+                    message = $"All favourites cleared. Deleted {deletedCount} items.",
                     deletedCount
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "清空收藏列表失敗: MemberId={MemberId}", memberId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                _logger.LogError(ex, "Failed to clear favourites: MemberId={MemberId}", memberId);
+                return StatusCode(500, new { message = "Internal server error." });
             }
-        }*/
+        }
+        */
 
-        //for future enhancement
+        // for future enhancement: check favourite status
         /// <summary>
-        /// 檢查詞彙是否已收藏
+        /// Check if a vocabulary item is in favourites.
         /// GET /api/favourites/{memberId}/check/{vocabularyId}
         /// </summary>
-        /*[HttpGet("{memberId}/check/{vocabularyId}")]
+        /*
+        [HttpGet("{memberId}/check/{vocabularyId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CheckFavouriteResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -271,7 +278,7 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             try
@@ -285,10 +292,11 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "檢查收藏狀態失敗: MemberId={MemberId}, VocabId={VocabId}",
+                _logger.LogError(ex, "Failed to check favourite status: MemberId={MemberId}, VocabId={VocabId}",
                     memberId, vocabularyId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                return StatusCode(500, new { message = "Internal server error." });
             }
-        }*/
+        }
+        */
     }
 }

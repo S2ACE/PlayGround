@@ -18,10 +18,10 @@ namespace VocabularyAPI.Controllers
         }
 
         /// <summary>
-        /// 取得所有指定語言的詞彙資料（DTO 版本）
+        /// Get all vocabulary items for the specified language (DTO version).
         /// </summary>
-        /// <param name="lang">語言代碼</param>
-        /// <returns>詞彙 DTO 清單</returns>
+        /// <param name="lang">Language code.</param>
+        /// <returns>Vocabulary DTO list.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<VocabularyListDto>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -30,31 +30,30 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(lang))
             {
-                _logger.LogWarning("Empty Lang");
-                return BadRequest("Lang can't be empty.");
+                _logger.LogWarning("Empty language code.");
+                return BadRequest("Language code cannot be empty.");
             }
 
             try
             {
                 var normalizedLang = lang.Trim().ToLower();
-                _logger.LogInformation("開始處理語言 {Language} 的詞彙請求", normalizedLang);
+                _logger.LogInformation("Processing vocabulary request for language {Language}", normalizedLang);
 
-                // 從 Service 取得 DTO
                 var items = await _service.GetAllByLanguageAsync(normalizedLang);
 
                 if (!items.Any())
                 {
-                    _logger.LogInformation("沒有找到語言 {Language} 的詞彙", normalizedLang);
-                    return NotFound($"找不到語言 '{normalizedLang}' 的詞彙資料");
+                    _logger.LogInformation("No vocabulary found for language {Language}", normalizedLang);
+                    return NotFound($"No vocabulary found for language '{normalizedLang}'.");
                 }
 
-                _logger.LogInformation("成功回傳 {Count} 個 {Language} 詞彙", items.Count(), normalizedLang);
-                return Ok(items);  // 回傳 DTO 給前端
+                _logger.LogInformation("Successfully returned {Count} {Language} vocabulary items", items.Count(), normalizedLang);
+                return Ok(items);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "處理語言 {Language} 詞彙請求時發生錯誤", lang);
-                return StatusCode(500, "服務器內部錯誤");
+                _logger.LogError(ex, "Error while processing vocabulary request for language {Language}", lang);
+                return StatusCode(500, "Internal server error.");
             }
         }
     }

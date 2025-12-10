@@ -9,7 +9,6 @@ namespace VocabularyAPI.Models
         [Key, Column("member_id", Order = 0)]
         [Required]
         [StringLength(128)]
-
         public string MemberId { get; set; } = string.Empty;
 
         [Key, Column("vocabulary_id", Order = 1)]
@@ -36,7 +35,7 @@ namespace VocabularyAPI.Models
         [ForeignKey(nameof(VocabularyId))]
         public virtual Vocabulary? Vocabulary { get; set; }
 
-        // 計算屬性: 根據 MasteredCount 計算 CurrentProficiency
+        // Computed property: derive current proficiency from MasteredCount.
         [NotMapped]
         public string CurrentProficiency
         {

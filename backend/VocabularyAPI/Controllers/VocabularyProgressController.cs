@@ -6,7 +6,7 @@ using VocabularyAPI.Services;
 namespace VocabularyAPI.Controllers
 {
     /// <summary>
-    /// 單字學習進度 API
+    /// Vocabulary learning progress API.
     /// </summary>
     [ApiController]
     [Route("api/progress")]
@@ -25,10 +25,10 @@ namespace VocabularyAPI.Controllers
         }
 
         /// <summary>
-        /// 取得用戶的學習進度
+        /// Get learning progress for a member.
         /// </summary>
-        /// <param name="memberId">會員 ID</param>
-        /// <returns>進度列表</returns>
+        /// <param name="memberId">Member ID.</param>
+        /// <returns>Progress list.</returns>
         [HttpGet("{memberId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(VocabularyProgressListResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -39,14 +39,14 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != memberId)
             {
                 _logger.LogWarning(
-                    "未授權存取: UserId={UserId}, RequestedMemberId={MemberId}",
+                    "Unauthorized access: UserId={UserId}, RequestedMemberId={MemberId}",
                     userId, memberId);
                 return Forbid();
             }
@@ -58,22 +58,22 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "取得學習進度失敗: MemberId={MemberId}", memberId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                _logger.LogError(ex, "Failed to get progress: MemberId={MemberId}", memberId);
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
 
         /// <summary>
-        /// 更新或新增單個單字進度
+        /// Create or update progress for a single vocabulary item.
         /// </summary>
-        /// <param name="memberId">會員 ID</param>
-        /// <param name="request">進度資料</param>
-        /// <returns>更新結果</returns>
-        /// <response code="200">成功更新</response>
-        /// <response code="400">資料驗證失敗</response>
-        /// <response code="401">未授權</response>
-        /// <response code="403">權限不足</response>
-        /// <response code="500">伺服器錯誤</response>
+        /// <param name="memberId">Member ID.</param>
+        /// <param name="request">Progress payload.</param>
+        /// <returns>Update result.</returns>
+        /// <response code="200">Progress updated successfully.</response>
+        /// <response code="400">Validation failed.</response>
+        /// <response code="401">Unauthorized.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="500">Internal server error.</response>
         [HttpPost("{memberId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -86,7 +86,7 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             if (!ModelState.IsValid)
@@ -94,7 +94,6 @@ namespace VocabularyAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            // 驗證權限
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != memberId)
             {
@@ -106,36 +105,36 @@ namespace VocabularyAPI.Controllers
                 await _service.UpsertProgressAsync(memberId, request);
                 return Ok(new
                 {
-                    message = "進度已更新",
+                    message = "Progress updated successfully.",
                     vocabularyId = request.VocabularyId,
                     masteredCount = request.MasteredCount
                 });
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "更新進度失敗: 參數錯誤");
+                _logger.LogWarning(ex, "Failed to update progress: invalid arguments.");
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "更新進度失敗: MemberId={MemberId}, VocabId={VocabId}",
+                    "Failed to update progress: MemberId={MemberId}, VocabId={VocabId}",
                     memberId, request.VocabularyId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
 
         /// <summary>
-        /// 批量更新進度 (用於測試結束時)
+        /// Batch update learning progress (used after completing a test).
         /// </summary>
-        /// <param name="memberId">會員 ID</param>
-        /// <param name="request">進度列表</param>
-        /// <returns>批量更新結果</returns>
-        /// <response code="200">成功批量更新</response>
-        /// <response code="400">資料驗證失敗</response>
-        /// <response code="401">未授權</response>
-        /// <response code="403">權限不足</response>
-        /// <response code="500">伺服器錯誤</response>
+        /// <param name="memberId">Member ID.</param>
+        /// <param name="request">Progress list payload.</param>
+        /// <returns>Batch update result.</returns>
+        /// <response code="200">Batch update completed successfully.</response>
+        /// <response code="400">Validation failed.</response>
+        /// <response code="401">Unauthorized.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="500">Internal server error.</response>
         [HttpPost("{memberId}/batch")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BatchUpdateProgressResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -148,15 +147,14 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
             if (!ModelState.IsValid || request.ProgressList == null || !request.ProgressList.Any())
             {
-                return BadRequest(new { message = "Progress list 不能為空" });
+                return BadRequest(new { message = "Progress list cannot be empty." });
             }
 
-            // 驗證權限
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != memberId)
             {
@@ -170,21 +168,21 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "批量更新進度失敗: MemberId={MemberId}", memberId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                _logger.LogError(ex, "Failed to batch update progress: MemberId={MemberId}", memberId);
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
 
         /// <summary>
-        /// 清空學習進度 (刪除所有進度記錄)
+        /// Delete all learning progress records for a member.
         /// </summary>
-        /// <param name="memberId">會員 ID</param>
-        /// <returns>刪除結果</returns>
-        /// <response code="200">成功清空</response>
-        /// <response code="400">Member ID 不能為空</response>
-        /// <response code="401">未授權</response>
-        /// <response code="403">權限不足</response>
-        /// <response code="500">伺服器錯誤</response>
+        /// <param name="memberId">Member ID.</param>
+        /// <returns>Delete summary.</returns>
+        /// <response code="200">All progress records cleared.</response>
+        /// <response code="400">Member ID cannot be empty.</response>
+        /// <response code="401">Unauthorized.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="500">Internal server error.</response>
         [HttpDelete("{memberId}/all")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -195,10 +193,9 @@ namespace VocabularyAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(memberId))
             {
-                return BadRequest(new { message = "Member ID 不能為空" });
+                return BadRequest(new { message = "Member ID cannot be empty." });
             }
 
-            // 驗證權限
             var userId = User.FindFirst("user_id")?.Value;
             if (userId != memberId)
             {
@@ -210,14 +207,14 @@ namespace VocabularyAPI.Controllers
                 var deletedCount = await _service.DeleteAllProgressAsync(memberId);
                 return Ok(new
                 {
-                    message = $"已清空學習進度,共刪除 {deletedCount} 個",
+                    message = $"All learning progress cleared. Deleted {deletedCount} records.",
                     deletedCount
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "清空學習進度失敗: MemberId={MemberId}", memberId);
-                return StatusCode(500, new { message = "服務器內部錯誤" });
+                _logger.LogError(ex, "Failed to clear learning progress: MemberId={MemberId}", memberId);
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
     }

@@ -26,21 +26,21 @@ namespace VocabularyAPI.DTOs
 
     public class UpdateProgressRequestDto
     {
-        [Required(ErrorMessage = "VocabularyId 為必填")]
+        [Required(ErrorMessage = "VocabularyId is required.")]
         public int VocabularyId { get; set; }
 
-        [Required(ErrorMessage = "MasteredCount 為必填")]
-        [Range(0, 3, ErrorMessage = "MasteredCount 必須在 0-3 之間")]
+        [Required(ErrorMessage = "MasteredCount is required.")]
+        [Range(0, 3, ErrorMessage = "MasteredCount must be between 0 and 3.")]
         public int MasteredCount { get; set; }
 
-        [Required(ErrorMessage = "LastTestDate 為必填")]
+        [Required(ErrorMessage = "LastTestDate is required.")]
         public DateTime LastTestDate { get; set; }
     }
 
     public class BatchUpdateProgressRequestDto
     {
         [Required]
-        [MinLength(1, ErrorMessage = "ProgressList 不能為空")]
+        [MinLength(1, ErrorMessage = "ProgressList cannot be empty.")]
         public List<UpdateProgressRequestDto> ProgressList { get; set; } = new List<UpdateProgressRequestDto>();
     }
 

@@ -11,6 +11,7 @@ namespace VocabularyAPI.Services
         private readonly VocabularyContext _context;
         private readonly IMemoryCache _cache;
         private readonly ILogger<FavouriteVocabularyService> _logger;
+
         private const string CACHE_KEY_PREFIX = "favourites:";
         private static readonly TimeSpan CACHE_SLIDING_EXPIRATION = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan CACHE_ABSOLUTE_EXPIRATION = TimeSpan.FromHours(1);
@@ -26,53 +27,51 @@ namespace VocabularyAPI.Services
         }
 
         /// <summary>
-        /// 取得會員的收藏 ID 列表 (含 Cache)
+        /// Get favourite vocabulary IDs for a member (with in-memory cache).
         /// </summary>
         public async Task<FavouriteVocabularyResponseDto> GetFavouritesByMemberIdAsync(string memberId)
         {
             var cacheKey = $"{CACHE_KEY_PREFIX}{memberId}";
 
-            // ==================== 步驟 1: 檢查快取 ====================
+            // Step 1: Try cache first.
             if (_cache.TryGetValue(cacheKey, out FavouriteVocabularyResponseDto? cached))
             {
-                _logger.LogInformation("✅ Cache Hit: {MemberId}", memberId);
-                return cached!;  // 如果有快取,直接回傳,不會執行下面的代碼
+                _logger.LogInformation("✅ Cache hit: {MemberId}", memberId);
+                return cached!;
             }
 
-            // ==================== 步驟 2: 快取 Miss,查詢資料庫 ====================
-            _logger.LogInformation("⚠️ Cache Miss: {MemberId}", memberId);
+            // Step 2: Cache miss, query database.
+            _logger.LogInformation("⚠️ Cache miss: {MemberId}", memberId);
 
             var vocabularyIds = await _context.FavouriteVocabulary
                 .Where(f => f.MemberId == memberId)
                 .OrderByDescending(f => f.AddedAt)
                 .Select(f => f.VocabularyId)
-                .ToListAsync();  // 👈 從資料庫查詢
+                .ToListAsync();
 
             var response = new FavouriteVocabularyResponseDto
             {
                 VocabularyIds = vocabularyIds,
                 TotalCount = vocabularyIds.Count
-            };  // 建立回應物件
+            };
 
-            // ==================== 步驟 3: 設定快取選項 ====================
+            // Step 3: Configure cache options.
             var cacheOptions = new MemoryCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromMinutes(5))  // 5分鐘無訪問自動過期
-                .SetAbsoluteExpiration(TimeSpan.FromHours(1));  // 最長存活1小時
+                .SetSlidingExpiration(CACHE_SLIDING_EXPIRATION)
+                .SetAbsoluteExpiration(CACHE_ABSOLUTE_EXPIRATION);
 
-            // ==================== 步驟 4: 【這裡】資料被快取! ====================
-            _cache.Set(cacheKey, response, cacheOptions);  // 👈👈👈 就是這一行!
-                                                           //         ↑          ↑         ↑
-                                                           //      快取Key    要快取的值   過期設定
+            // Step 4: Store in cache.
+            _cache.Set(cacheKey, response, cacheOptions);
 
-            _logger.LogInformation("💾 已快取收藏列表: {MemberId}, Count={Count}",
+            _logger.LogInformation("💾 Cached favourites: MemberId={MemberId}, Count={Count}",
                 memberId, vocabularyIds.Count);
 
-            // ==================== 步驟 5: 回傳結果 ====================
+            // Step 5: Return result.
             return response;
         }
 
         /// <summary>
-        /// 新增收藏
+        /// Add a favourite vocabulary for a member.
         /// </summary>
         public async Task<bool> AddFavouriteAsync(string memberId, int vocabularyId)
         {
@@ -81,7 +80,7 @@ namespace VocabularyAPI.Services
 
             if (exists)
             {
-                _logger.LogInformation("單字已在收藏列表中: MemberId={MemberId}, VocabId={VocabId}",
+                _logger.LogInformation("Vocabulary already in favourites: MemberId={MemberId}, VocabId={VocabId}",
                     memberId, vocabularyId);
                 return false;
             }
@@ -89,7 +88,7 @@ namespace VocabularyAPI.Services
             var vocabularyExists = await _context.Vocabulary.AnyAsync(v => v.Id == vocabularyId);
             if (!vocabularyExists)
             {
-                throw new ArgumentException($"詞彙 ID {vocabularyId} 不存在");
+                throw new ArgumentException($"Vocabulary ID {vocabularyId} does not exist.");
             }
 
             var favourite = new FavouriteVocabulary
@@ -104,13 +103,13 @@ namespace VocabularyAPI.Services
 
             InvalidateCache(memberId);
 
-            _logger.LogInformation("✅ 新增收藏成功: MemberId={MemberId}, VocabId={VocabId}",
+            _logger.LogInformation("✅ Favourite added: MemberId={MemberId}, VocabId={VocabId}",
                 memberId, vocabularyId);
             return true;
         }
 
         /// <summary>
-        /// 移除收藏
+        /// Remove a favourite vocabulary for a member.
         /// </summary>
         public async Task<bool> RemoveFavouriteAsync(string memberId, int vocabularyId)
         {
@@ -119,7 +118,7 @@ namespace VocabularyAPI.Services
 
             if (favourite == null)
             {
-                _logger.LogInformation("收藏不存在: MemberId={MemberId}, VocabId={VocabId}",
+                _logger.LogInformation("Favourite not found: MemberId={MemberId}, VocabId={VocabId}",
                     memberId, vocabularyId);
                 return false;
             }
@@ -129,13 +128,14 @@ namespace VocabularyAPI.Services
 
             InvalidateCache(memberId);
 
-            _logger.LogInformation("✅ 移除收藏成功: MemberId={MemberId}, VocabId={VocabId}",
+            _logger.LogInformation("✅ Favourite removed: MemberId={MemberId}, VocabId={VocabId}",
                 memberId, vocabularyId);
             return true;
         }
-        //for future enhancement
+
+        // for future enhancement
         /// <summary>
-        /// 批量同步收藏 (localStorage → Database)
+        /// Sync favourites in bulk (from localStorage to database).
         /// </summary>
         public async Task<BulkFavouritesResponseDto> SyncFavouritesAsync(string memberId, List<int> vocabularyIds)
         {
@@ -166,8 +166,8 @@ namespace VocabularyAPI.Services
                         else
                         {
                             skippedCount++;
-                            errors.Add($"詞彙 ID {vocabId} 不存在");
-                            _logger.LogWarning("詞彙 ID {VocabId} 不存在,跳過同步", vocabId);
+                            errors.Add($"Vocabulary ID {vocabId} does not exist.");
+                            _logger.LogWarning("Vocabulary ID {VocabId} does not exist, skipping sync.", vocabId);
                         }
                     }
                     else
@@ -178,8 +178,8 @@ namespace VocabularyAPI.Services
                 catch (Exception ex)
                 {
                     skippedCount++;
-                    errors.Add($"同步詞彙 ID {vocabId} 失敗: {ex.Message}");
-                    _logger.LogError(ex, "同步詞彙 ID {VocabId} 時發生錯誤", vocabId);
+                    errors.Add($"Failed to sync vocabulary ID {vocabId}: {ex.Message}");
+                    _logger.LogError(ex, "Error while syncing vocabulary ID {VocabId}", vocabId);
                 }
             }
 
@@ -189,7 +189,7 @@ namespace VocabularyAPI.Services
                 InvalidateCache(memberId);
             }
 
-            _logger.LogInformation("✅ 同步完成: MemberId={MemberId}, Success={Success}, Skipped={Skipped}",
+            _logger.LogInformation("✅ Sync completed: MemberId={MemberId}, Success={Success}, Skipped={Skipped}",
                 memberId, successCount, skippedCount);
 
             return new BulkFavouritesResponseDto
@@ -197,12 +197,13 @@ namespace VocabularyAPI.Services
                 SuccessCount = successCount,
                 SkippedCount = skippedCount,
                 Errors = errors,
-                Message = $"同步完成: 新增 {successCount} 個,跳過 {skippedCount} 個"
+                Message = $"Sync completed: added {successCount}, skipped {skippedCount}."
             };
         }
-        //for future enhancement
+
+        // for future enhancement
         /// <summary>
-        /// 批量刪除收藏
+        /// Delete multiple favourites in a single operation.
         /// </summary>
         public async Task<BulkFavouritesResponseDto> BulkDeleteFavouritesAsync(string memberId, List<int> vocabularyIds)
         {
@@ -225,14 +226,14 @@ namespace VocabularyAPI.Services
                     else
                     {
                         skippedCount++;
-                        _logger.LogInformation("收藏不存在,跳過: VocabId={VocabId}", vocabId);
+                        _logger.LogInformation("Favourite not found, skipping: VocabId={VocabId}", vocabId);
                     }
                 }
                 catch (Exception ex)
                 {
                     skippedCount++;
-                    errors.Add($"刪除詞彙 ID {vocabId} 失敗: {ex.Message}");
-                    _logger.LogError(ex, "刪除詞彙 ID {VocabId} 時發生錯誤", vocabId);
+                    errors.Add($"Failed to delete vocabulary ID {vocabId}: {ex.Message}");
+                    _logger.LogError(ex, "Error while deleting vocabulary ID {VocabId}", vocabId);
                 }
             }
 
@@ -242,7 +243,7 @@ namespace VocabularyAPI.Services
                 InvalidateCache(memberId);
             }
 
-            _logger.LogInformation("✅ 批量刪除完成: MemberId={MemberId}, Deleted={Deleted}, Skipped={Skipped}",
+            _logger.LogInformation("✅ Bulk delete completed: MemberId={MemberId}, Deleted={Deleted}, Skipped={Skipped}",
                 memberId, successCount, skippedCount);
 
             return new BulkFavouritesResponseDto
@@ -250,12 +251,13 @@ namespace VocabularyAPI.Services
                 SuccessCount = successCount,
                 SkippedCount = skippedCount,
                 Errors = errors,
-                Message = $"批量刪除完成: 刪除 {successCount} 個,跳過 {skippedCount} 個"
+                Message = $"Bulk delete completed: deleted {successCount}, skipped {skippedCount}."
             };
         }
-        //for future enhancement
+
+        // for future enhancement
         /// <summary>
-        /// 刪除所有收藏 (清空收藏列表)
+        /// Delete all favourites for a member.
         /// </summary>
         public async Task<int> DeleteAllFavouritesAsync(string memberId)
         {
@@ -273,20 +275,20 @@ namespace VocabularyAPI.Services
 
             InvalidateCache(memberId);
 
-            _logger.LogInformation("✅ 已清空收藏列表: MemberId={MemberId}, Count={Count}",
+            _logger.LogInformation("✅ All favourites cleared: MemberId={MemberId}, Count={Count}",
                 memberId, favourites.Count);
 
             return favourites.Count;
         }
 
         /// <summary>
-        /// 清除 Cache
+        /// Invalidate favourites cache entry for a member.
         /// </summary>
         private void InvalidateCache(string memberId)
         {
             var cacheKey = $"{CACHE_KEY_PREFIX}{memberId}";
             _cache.Remove(cacheKey);
-            _logger.LogInformation("🗑️ Cache Invalidated: {MemberId}", memberId);
+            _logger.LogInformation("🗑️ Cache invalidated: MemberId={MemberId}", memberId);
         }
     }
 }

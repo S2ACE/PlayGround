@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using VocabularyAPI.Services;
 using VocabularyAPI.DTOs;
 
-
 namespace VocabularyAPI.Controllers
 {
     [ApiController]
@@ -20,15 +19,15 @@ namespace VocabularyAPI.Controllers
         }
 
         /// <summary>
-        /// 檢查 Email 是否已存在（供前端使用）
+        /// Check if an email is already registered (for frontend use).
         /// </summary>
-        /// <param name="request">Email 檢查請求</param>
-        /// <returns>檢查結果</returns>
+        /// <param name="request">Email check request payload.</param>
+        /// <returns>Email existence and provider information.</returns>
         [HttpPost("check-email")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CheckEmailResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]    
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<CheckEmailResponseDto>> CheckEmail([FromBody] CheckEmailRequestDto request)
         {
             if (!ModelState.IsValid)
@@ -48,7 +47,8 @@ namespace VocabularyAPI.Controllers
                     Providers = member?.Providers.Select(p => p.Provider).ToList() ?? new List<string>()
                 };
 
-                _logger.LogInformation("Email 檢查結果: {Email}, 存在: {Exists}, 提供者: [{Providers}]",
+                _logger.LogInformation(
+                    "Email check result: {Email}, Exists: {Exists}, Providers: [{Providers}]",
                     request.Email,
                     response.Exists,
                     string.Join(", ", response.Providers));
@@ -57,16 +57,16 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "檢查 Email 時發生錯誤: {Email}", request.Email);
-                return StatusCode(500, "服務器內部錯誤");
+                _logger.LogError(ex, "Error while checking email: {Email}", request.Email);
+                return StatusCode(500, "Internal server error");
             }
         }
 
         /// <summary>
-        /// 同步 Firebase 用戶到資料庫
+        /// Sync a Firebase user to the application database.
         /// </summary>
-        /// <param name="request">同步用戶請求</param>
-        /// <returns>同步結果</returns>
+        /// <param name="request">Sync user request payload.</param>
+        /// <returns>Sync result.</returns>
         [HttpPost("sync")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SyncUserResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -81,7 +81,7 @@ namespace VocabularyAPI.Controllers
 
             try
             {
-                // TODO: 在這裡可以加入 Firebase ID Token 驗證
+                // TODO: Add Firebase ID token validation here if needed.
                 // var firebaseToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 // await VerifyFirebaseToken(firebaseToken);
 
@@ -91,8 +91,8 @@ namespace VocabularyAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "同步用戶時發生錯誤: {UserId}", request.Id);
-                return StatusCode(500, "服務器內部錯誤");
+                _logger.LogError(ex, "Error while syncing user: {UserId}", request.Id);
+                return StatusCode(500, "Internal server error");
             }
         }
     }

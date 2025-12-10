@@ -4,13 +4,14 @@ namespace VocabularyAPI.DTOs
 {
     public class AddFavouriteRequestDto
     {
-        [Required(ErrorMessage = "VocabularyId 為必填")]
+        [Required(ErrorMessage = "VocabularyId is required.")]
         public int VocabularyId { get; set; }
     }
+
     public class BulkFavouritesRequestDto
     {
-        [Required(ErrorMessage = "VocabularyIds 為必填")]
-        [MinLength(1, ErrorMessage = "至少需要一個 VocabularyId")]
+        [Required(ErrorMessage = "VocabularyIds is required.")]
+        [MinLength(1, ErrorMessage = "At least one VocabularyId is required.")]
         public List<int> VocabularyIds { get; set; } = new List<int>();
     }
 
