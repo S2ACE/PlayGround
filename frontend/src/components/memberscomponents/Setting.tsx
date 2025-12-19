@@ -10,6 +10,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/AuthService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import AvatarEditor from 'react-avatar-editor';
+import SlideTransition from '../common/SlideTransition';
 
 const Settings = (): JSX.Element | null => {
     // Auth context and global user info
@@ -553,8 +554,12 @@ const Settings = (): JSX.Element | null => {
                             setPasswordError('');
                         }
                     }}
+                    slots={{
+                        transition: SlideTransition
+                    }}
                     maxWidth="sm"
                     fullWidth
+                    
                     slotProps={{
                         paper: {
                             sx:(theme) => ({

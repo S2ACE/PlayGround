@@ -8,7 +8,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import { useVocabulary } from '../../contexts/VocabularyContext';
 import ConfettiContainer from "./ConfettiContainer";
 import confettiUrl from '../../assets/confetti.svg';
-
+import HowToPlayDialog from './HowToPlayDialog';
 
 const WordGuess = () => {
     // State variables
@@ -16,6 +16,8 @@ const WordGuess = () => {
     const [currentVocabularty, setCurrentWord] = useState<string>('');
     const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
     const [showConfetti, setShowConfetti] = useState<boolean>(true);
+    // How to play dialog state
+    const [isHowToPlayOpen, setHowToPlayOpen] = useState(false);
 
     useEffect(() => {
         if (isReady) {
@@ -81,6 +83,7 @@ const WordGuess = () => {
                 showConfetti={showConfetti}
                 onToggleConfetti={() => setShowConfetti(prev => !prev)}
                 confettiUrl={confettiUrl}
+                onOpenHowToPlay={() => setHowToPlayOpen(true)}
             />
             <GuessTile
                 currentVocabularty={currentVocabularty}
@@ -97,7 +100,10 @@ const WordGuess = () => {
                 isGameOver={isGameOver}
                 startNewGame={startNewGame}
             />
-
+			<HowToPlayDialog 
+				open={isHowToPlayOpen} 
+				onClose={() => setHowToPlayOpen(false)} 
+			/>
         </Box>
     );
 };

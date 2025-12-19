@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { Google, Close, ArrowBack } from '@mui/icons-material';
 import { authService } from '../../services/AuthService';
+import SlideTransition from '../common/SlideTransition';
 
 interface AuthDialogProps {
 	open: boolean;
@@ -382,6 +383,9 @@ const AuthDialog = ({ open, onClose }: AuthDialogProps): JSX.Element => {
 					}
 					handleClose();
 				}}
+				slots={{
+					transition: SlideTransition
+				}}				
 				maxWidth="sm"
 				fullWidth
 				slotProps={{

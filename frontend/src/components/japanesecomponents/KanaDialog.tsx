@@ -13,6 +13,7 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import KanaCanvas, { type KanaCanvasHandle } from './KanaCanvas';
 import KanaSpeak from './KanaSpeak';
+import SlideTransition from '../common/SlideTransition';
 
 interface KanaDialogProps {
 	open: boolean;
@@ -57,6 +58,9 @@ const KanaDialog = ({
 			onClose={handleClose}
 			fullWidth
 			maxWidth="sm"
+			slots={{
+				transition: SlideTransition
+			}}
 			slotProps={{
 				paper: {
 					sx: {
