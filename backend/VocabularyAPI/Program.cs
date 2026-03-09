@@ -8,9 +8,8 @@ using VocabularyAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// 🔧 DB Context (Neon Postgres - Render用)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
 builder.Services.AddDbContext<VocabularyContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -19,23 +18,21 @@ builder.Services.AddScoped<MembersService>();
 builder.Services.AddScoped<FavouriteVocabularyService>();
 builder.Services.AddScoped<VocabularyProgressService>();
 
-
-// 🔧 關鍵:設定監聽 Railway 的 PORT
+// 🔧 Render PORT設定 (0.0.0.0:PORT)
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.AddMemoryCache();
 
-// Firebase 初始化
-var firebaseCredentialJson = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIAL_JSON");
-
-if (!string.IsNullOrEmpty(firebaseCredentialJson))
+// Firebase Admin SDK (本地用firebase-adminsdk-playground.json)
+var firebaseCredentialPath = Path.Combine(builder.Environment.ContentRootPath, "firebase-adminsdk-playground.json");
+if (!string.IsNullOrEmpty(firebaseCredentialPath) && File.Exists(firebaseCredentialPath))
 {
     try
     {
         FirebaseApp.Create(new AppOptions()
         {
-            Credential = GoogleCredential.FromJson(firebaseCredentialJson)
+            Credential = GoogleCredential.FromFile(firebaseCredentialPath)
         });
         Console.WriteLine("✅ Firebase initialized successfully");
     }
@@ -49,7 +46,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Firebase JWT 驗證
+// Firebase JWT Authentication
 var firebaseProjectId = Environment.GetEnvironmentVariable("FIREBASE_PROJECT_ID")
     ?? builder.Configuration["Firebase:ProjectId"];
 
@@ -72,8 +69,9 @@ if (!string.IsNullOrEmpty(firebaseProjectId))
 
 builder.Services.AddAuthorization();
 
-// CORS 設定
+// CORS (Render用)
 var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL")
+    ?? builder.Configuration["FrontendUrl"]
     ?? "http://localhost:5173";
 
 builder.Services.AddCors(options =>
@@ -89,7 +87,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Swagger
+// Swagger (開發用)
 var enableSwagger = Environment.GetEnvironmentVariable("ENABLE_SWAGGER") == "true"
     || app.Environment.IsDevelopment();
 
@@ -108,15 +106,18 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// health check
+// Health Check (Render用)
 app.MapGet("/health", () => new
 {
     status = "healthy",
-    message = "VocabularyAPI is running",
+    message = "VocabularyAPI on Render",
     timestamp = DateTime.UtcNow,
-    port = port
+    port = port,
+    environment = app.Environment.EnvironmentName
 });
 
-Console.WriteLine($"🚀 Starting on port {port}");
+Console.WriteLine($"🚀 VocabularyAPI starting on http://0.0.0.0:{port}");
+Console.WriteLine($"   Health: http://localhost:{port}/health");
+Console.WriteLine($"   Swagger: http://localhost:{port}/swagger");
 
 app.Run();
