@@ -8,8 +8,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# 🔧 複製整個 backend/VocabularyAPI 資料夾
-COPY backend/VocabularyAPI/ .
+#  複製整個 backend/VocabularyAPI 資料夾
+COPY . .
 
 # 現在 .csproj 在當前目錄
 RUN dotnet restore "VocabularyAPI.csproj"
