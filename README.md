@@ -12,7 +12,7 @@ The website is designed for junior Japanese and English learners.
 - Database: PostgreSQL
 - Auth: Firebase Authentication (Email/Password + Google)
 - Storage: Supabase Storage (avatars)
-- Hosting: Vercel (frontend), Railway (backend)
+- Hosting: Vercel (frontend), Render (backend)
 - Testing / Debugging: Postman, Swagger, Browser DevTools, React DevTools
 
 ## Monorepo Structure
