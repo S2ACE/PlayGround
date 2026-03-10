@@ -102,6 +102,11 @@ if (enableSwagger)
 }
 
 app.UseCors();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups";
+    await next();
+});
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
